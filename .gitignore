@@ -1,0 +1,19 @@
+# Gradle files
+.gradle/
+build/
+
+# Android build outputs
+*.apk
+*.aab
+
+# Local configuration file
+local.properties
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
