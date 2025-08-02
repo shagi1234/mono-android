@@ -402,6 +402,7 @@ class PlayerController @Inject constructor(
 
     override fun onSeekBarPositionChanged(position: Long) {
         CoroutineScope(Dispatchers.Main).launch {
+//            Log.e("PLAYER", "onSeekBarPositionChanged: $position" )
             myPlayer.seekToPosition(position)
         }
     }

@@ -24,6 +24,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -62,6 +63,7 @@ import com.mono.music.ui.theme.SFFontFamily
 import com.mono.music.ui.theme.WhiteTextColor
 import com.mono.music.ui.theme.Yellow
 import com.mono.music.ui.utils.formatTime
+import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,6 +75,7 @@ fun PlaybackControls(
 ) {
 
     val haptic = LocalHapticFeedback.current
+
 
     val progressState by playerController.playbackState.collectAsState(
         initial = PlaybackState(0L, 0L, 0L)
@@ -93,6 +96,16 @@ fun PlaybackControls(
 
     var currentMediaProgress = progressState.currentPlaybackPosition.toFloat()
 
+
+    LaunchedEffect(currentMediaProgress) {
+        if (draggingProgress != null) {
+            val difference = abs(currentMediaProgress - draggingProgress!!)
+            if (difference < 1000) {
+                draggingProgress = null
+            }
+        }
+    }
+
     Column(modifier = modifier) {
         Slider(
             value = draggingProgress ?: currentMediaProgress,
@@ -103,7 +116,6 @@ fun PlaybackControls(
                 draggingProgress?.toLong()?.let {
                     playerController.onSeekBarPositionChanged(it)
                 }
-                draggingProgress = null
             },
 
             valueRange = 0f..progressState.currentTrackDuration.toFloat(),

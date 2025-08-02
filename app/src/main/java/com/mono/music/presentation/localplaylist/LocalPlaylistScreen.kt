@@ -138,18 +138,18 @@ fun LocalPlaylistScreen(
         }
     }
 
-
-    Scaffold(modifier = Modifier
-        .fillMaxSize()
-        .background(
-            AlbumCoverBlackBG
-        ), snackbarHost = {
-        SnackbarHost(snackbarHostState) { data ->
-            Snackbar(
-                containerColor = Inactive, contentColor = WhiteTextColor, snackbarData = data
-            )
-        }
-    }) { padding ->
+    Scaffold(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                AlbumCoverBlackBG
+            ), snackbarHost = {
+            SnackbarHost(snackbarHostState) { data ->
+                Snackbar(
+                    containerColor = Inactive, contentColor = WhiteTextColor, snackbarData = data
+                )
+            }
+        }) { padding ->
         CollapsibleScaffold(state = listState, topBarMaxHeight = screenWidth, snackbarHost = {
             SnackbarHost(snackbarHostState) { data ->
                 Snackbar(
@@ -233,7 +233,8 @@ fun LocalPlaylistScreen(
                 contentPadding = PaddingValues(top = insets.calculateTopPadding(), bottom = 100.dp)
             ) {
                 item {
-                    PlaylistButtonsRow(playlistExists = true,
+                    PlaylistButtonsRow(
+                        playlistExists = true,
                         downloadIcon = downloadIcon,
                         onPlay = {
                             playlist?.songs?.let { data ->
@@ -262,7 +263,7 @@ fun LocalPlaylistScreen(
                 }
 
                 playlist?.songs?.let { data ->
-                    itemsIndexed(data) {index, song ->
+                    itemsIndexed(data) { index, song ->
                         SwipeableSongView(
                             index = index,
                             showsOrderNumber = playlist?.playlist?.type == "albums",
