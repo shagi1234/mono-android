@@ -154,14 +154,14 @@ class MyPlayer @Inject constructor(
         playerState.tryEmit(STATE_ERROR)
     }
 
-    override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
-        // Always emit the appropriate state, regardless of the current playback state
-        if (playWhenReady) {
-            playerState.tryEmit(STATE_PLAYING)
-        } else {
-            playerState.tryEmit(STATE_PAUSE)
-        }
-    }
+//    override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+//        // Always emit the appropriate state, regardless of the current playback state
+//        if (playWhenReady) {
+//            playerState.tryEmit(STATE_PLAYING)
+//        } else {
+//            playerState.tryEmit(STATE_PAUSE)
+//        }
+//    }
 
     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
         // Immediately emit the state change
@@ -169,28 +169,28 @@ class MyPlayer @Inject constructor(
 
         // If the player is set to play when ready and we've transitioned to a new item,
         // also emit the playing state to ensure UI updates
-        if (player.playWhenReady) {
-            handler.postDelayed({
-                playerState.tryEmit(STATE_PLAYING)
-            }, 50) // Small delay to ensure transition state is processed first
-        }
+//        if (player.playWhenReady) {
+//            handler.postDelayed({
+//                playerState.tryEmit(STATE_PLAYING)
+//            }, 50) // Small delay to ensure transition state is processed first
+//        }
     }
 
-    override fun onPlaybackStateChanged(playbackState: Int) {
-        if (playbackState != Player.STATE_ENDED) return
-
-        player.seekTo(0, 0)
-
-        if (player.repeatMode == Player.REPEAT_MODE_ALL) {
-            playerState.tryEmit(STATE_PLAYING)
-            player.play()
-        } else {
-            Handler(Looper.getMainLooper()).postDelayed({
-                playerState.tryEmit(STATE_PAUSE)
-                player.pause()
-            }, 10)
-        }
-    }
+//    override fun onPlaybackStateChanged(playbackState: Int) {
+//        if (playbackState != Player.STATE_ENDED) return
+//
+//        player.seekTo(0, 0)
+//
+//        if (player.repeatMode == Player.REPEAT_MODE_ALL) {
+//            playerState.tryEmit(STATE_PLAYING)
+//            player.play()
+//        } else {
+//            Handler(Looper.getMainLooper()).postDelayed({
+//                playerState.tryEmit(STATE_PAUSE)
+//                player.pause()
+//            }, 10)
+//        }
+//    }
 
     fun onPlayerPaused() {
         if (wakeLock.isHeld) {
@@ -252,6 +252,65 @@ class MyPlayer @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e(TAG, "Audio focus request failed", e)
+        }
+    }
+
+    override fun onPlaybackStateChanged(playbackState: Int) {
+        when (playbackState) {
+            Player.STATE_IDLE -> {
+                isBuffering = false
+                playerState.tryEmit(STATE_IDLE)
+            }
+            Player.STATE_BUFFERING -> {
+                isBuffering = true
+                playerState.tryEmit(PlayerStates.STATE_BUFFERING)
+            }
+            Player.STATE_READY -> {
+                isBuffering = false
+                // Проверяем, что плеер реально играет
+                if (player.playWhenReady && player.isPlaying) {
+                    playerState.tryEmit(STATE_PLAYING)
+                } else {
+                    playerState.tryEmit(STATE_PAUSE)
+                }
+            }
+            Player.STATE_ENDED -> {
+                isBuffering = false
+                player.seekTo(0, 0)
+
+                if (player.repeatMode == Player.REPEAT_MODE_ALL) {
+                    playerState.tryEmit(STATE_PLAYING)
+                    player.play()
+                } else {
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        playerState.tryEmit(STATE_PAUSE)
+                        player.pause()
+                    }, 10)
+                }
+            }
+        }
+    }
+
+    override fun onIsPlayingChanged(isPlaying: Boolean) {
+        if (isPlaying) {
+            isBuffering = false
+            playerState.tryEmit(STATE_PLAYING)
+        } else {
+            // Только если не буферизуется
+            if (!isBuffering && player.playbackState == Player.STATE_READY) {
+                playerState.tryEmit(STATE_PAUSE)
+            }
+        }
+    }
+
+    override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+        // Обновляем состояние только если плеер готов
+        if (player.playbackState == Player.STATE_READY) {
+            if (playWhenReady && player.isPlaying) {
+                playerState.tryEmit(STATE_PLAYING)
+            } else if (!playWhenReady) {
+                playerState.tryEmit(STATE_PAUSE)
+            }
         }
     }
 }

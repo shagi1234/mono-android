@@ -54,6 +54,7 @@ import java.io.IOException
 import java.net.URL
 import javax.inject.Inject
 
+@Suppress("UNUSED_CHANGED_VALUE")
 @AndroidEntryPoint
 @OptIn(UnstableApi::class)
 class PlaybackService : MediaSessionService() {
@@ -99,7 +100,11 @@ class PlaybackService : MediaSessionService() {
         val notification = createNotification()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
+            startForeground(
+                NOTIFICATION_ID,
+                notification,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+            )
         } else {
             startForeground(NOTIFICATION_ID, notification)
         }
@@ -169,13 +174,15 @@ class PlaybackService : MediaSessionService() {
 
                     // Now create and show notification with the loaded artwork
                     val notification = createNotification()
-                    val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                    val notificationManager =
+                        getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                     notificationManager.notify(NOTIFICATION_ID, notification)
                 }
             } else {
                 // We can use cached artwork or no artwork
                 val notification = createNotification()
-                val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                val notificationManager =
+                    getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                 notificationManager.notify(NOTIFICATION_ID, notification)
             }
         } catch (e: Exception) {
@@ -183,17 +190,74 @@ class PlaybackService : MediaSessionService() {
         }
     }
 
+//    private fun createNotification(): Notification {
+//        ensureNotificationChannel()
+//
+//        // Get current playback info
+//        val isPlaying = player.isPlaying
+//        val mediaItem = player.currentMediaItem
+//        val title = mediaItem?.mediaMetadata?.title ?: getString(R.string.app_name)
+//        val artist = mediaItem?.mediaMetadata?.artist ?: ""
+//        val albumTitle = mediaItem?.mediaMetadata?.albumTitle ?: ""
+//
+//        // Create notification builder
+//        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
+//            .setContentTitle(title)
+//            .setContentText(artist)
+//            .setSubText(albumTitle)
+//            .setSmallIcon(R.drawable.playing_on_device_ic)
+//            .setContentIntent(getContentIntent())
+//            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+//            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+//            .setDeleteIntent(getStopIntent())
+//
+//        // Use cached artwork if available
+//        if (currentArtwork != null) {
+//            builder.setLargeIcon(currentArtwork)
+//        }
+//
+//        // Add play/pause action
+//        if (isPlaying) {
+//            builder.addAction(R.drawable.pause, getString(R.string.pause), getPauseIntent())
+//        } else {
+//            builder.addAction(R.drawable.play, getString(R.string.play_all), getPlayIntent())
+//        }
+//
+//        // Add previous action if available
+//        if (player.hasPreviousMediaItem()) {
+//            builder.addAction(
+//                androidx.media3.session.R.drawable.media3_icon_previous,
+//                getString(androidx.media3.session.R.string.media3_controls_seek_to_previous_description),
+//                getPreviousIntent()
+//            )
+//        }
+//
+//        // Add next action if available
+//        if (player.hasNextMediaItem()) {
+//            builder.addAction(
+//                androidx.media3.session.R.drawable.media3_icon_next,
+//                getString(R.string.play_next),
+//                getNextIntent()
+//            )
+//        }
+//
+//        // Set media style
+//        builder.setStyle(
+//            MediaStyle(mediaSession).setShowActionsInCompactView(0, 1, 2)
+//        )
+//
+//        return builder.build()
+//    }
+
     private fun createNotification(): Notification {
         ensureNotificationChannel()
 
-        // Get current playback info
         val isPlaying = player.isPlaying
         val mediaItem = player.currentMediaItem
         val title = mediaItem?.mediaMetadata?.title ?: getString(R.string.app_name)
         val artist = mediaItem?.mediaMetadata?.artist ?: ""
         val albumTitle = mediaItem?.mediaMetadata?.albumTitle ?: ""
 
-        // Create notification builder
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(title)
             .setContentText(artist)
@@ -204,61 +268,60 @@ class PlaybackService : MediaSessionService() {
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setDeleteIntent(getStopIntent())
 
-        // Use cached artwork if available
         if (currentArtwork != null) {
             builder.setLargeIcon(currentArtwork)
         }
 
-        // Add play/pause action
+        val compactActions = mutableListOf<Int>()
+        var actionIndex = 0
+
         if (isPlaying) {
             builder.addAction(R.drawable.pause, getString(R.string.pause), getPauseIntent())
         } else {
             builder.addAction(R.drawable.play, getString(R.string.play_all), getPlayIntent())
         }
+        compactActions.add(actionIndex++) // Всегда показываем play/pause
 
-        // Add previous action if available
         if (player.hasPreviousMediaItem()) {
             builder.addAction(
                 androidx.media3.session.R.drawable.media3_icon_previous,
                 getString(androidx.media3.session.R.string.media3_controls_seek_to_previous_description),
                 getPreviousIntent()
             )
+            compactActions.add(actionIndex++)
         }
 
-        // Add next action if available
         if (player.hasNextMediaItem()) {
             builder.addAction(
                 androidx.media3.session.R.drawable.media3_icon_next,
                 getString(R.string.play_next),
                 getNextIntent()
             )
+            compactActions.add(actionIndex++)
         }
 
-        // Set media style
         builder.setStyle(
-            MediaStyle(mediaSession).setShowActionsInCompactView(0, 1, 2)
+            MediaStyle(mediaSession).setShowActionsInCompactView(*compactActions.toIntArray())
         )
 
         return builder.build()
     }
 
     private fun ensureNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val notificationManager =
-                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-            // Check if channel exists
-            if (notificationManager.getNotificationChannel(CHANNEL_ID) == null) {
-                val channel = NotificationChannel(
-                    CHANNEL_ID,
-                    getString(R.string.notification_channel_name),
-                    NotificationManager.IMPORTANCE_LOW
-                ).apply {
-                    description = getString(R.string.media_notification_channel_description)
-                    setShowBadge(false)
-                }
-                notificationManager.createNotificationChannel(channel)
+        // Check if channel exists
+        if (notificationManager.getNotificationChannel(CHANNEL_ID) == null) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                getString(R.string.notification_channel_name),
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = getString(R.string.media_notification_channel_description)
+                setShowBadge(false)
             }
+            notificationManager.createNotificationChannel(channel)
         }
     }
 
@@ -405,6 +468,7 @@ class PlaybackService : MediaSessionService() {
                             null
                         }
                     }
+
                     else -> null
                 }
             } catch (e: Exception) {
@@ -622,7 +686,8 @@ class MediaLibrarySessionCallback(
                 // Create a new media item with full metadata
                 val resolvedItem = item.buildUpon().setMediaMetadata(
                     MediaMetadata.Builder().setTitle(song.name).setArtist(song.getArtistsName())
-                        .setAlbumTitle(song.albumName).setArtworkUri(song.getSongImage().toUri()).build()
+                        .setAlbumTitle(song.albumName).setArtworkUri(song.getSongImage().toUri())
+                        .build()
                 ).build()
                 resolvedItems.add(resolvedItem)
             } else {

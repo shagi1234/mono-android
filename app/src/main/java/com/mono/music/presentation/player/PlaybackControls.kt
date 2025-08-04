@@ -1,5 +1,6 @@
 package com.mono.music.presentation.player
 
+import android.util.Log
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -96,6 +98,19 @@ fun PlaybackControls(
 
     var currentMediaProgress = progressState.currentPlaybackPosition.toFloat()
 
+
+    val realPlayerState = playerController.playerState
+
+    val showLoading = when (playerState) {
+        PlayerStates.STATE_PLAYING,
+        PlayerStates.STATE_PAUSE -> false
+        else -> true // STATE_BUFFERING, STATE_IDLE, STATE_MEDIA_ITEM_TRANSITION
+    }
+
+
+    LaunchedEffect (realPlayerState.value){
+        Log.e("PLAYER_STATE___", "PlaybackControls: ${realPlayerState.value}", )
+    }
 
     LaunchedEffect(currentMediaProgress) {
         if (draggingProgress != null) {
@@ -210,21 +225,44 @@ fun PlaybackControls(
                     .size(74.dp)
                     .clip(shape = CircleShape),
                 onClick = {
-                    playerController.onPlayPauseClick()
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    if (playerState == PlayerStates.STATE_PLAYING || playerState == PlayerStates.STATE_PAUSE) {
+                        playerController.onPlayPauseClick()
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    }
+//                    playerController.onPlayPauseClick()
+//                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 },
                 containerColor = Yellow,
                 contentColor = AlbumCoverBlackBG,
             ) {
-                Icon(
-                    modifier = Modifier.size(46.dp),
-                    painter = if (isPlaying)
-                        painterResource(
-                            id = R.drawable.pause
-                        ) else painterResource(id = R.drawable.play),
-                    contentDescription = stringResource(id = R.string.pause),
-                    tint = Background
-                )
+
+                if (playerState == PlayerStates.STATE_PLAYING || playerState == PlayerStates.STATE_PAUSE) {
+                    Icon(
+                        modifier = Modifier.size(46.dp),
+                        painter = if (isPlaying)
+                            painterResource(id = R.drawable.pause)
+                        else
+                            painterResource(id = R.drawable.play),
+                        contentDescription = stringResource(id = R.string.pause),
+                        tint = Background
+                    )
+                } else {
+                    // Для всех остальных состояний (BUFFERING, IDLE, MEDIA_ITEM_TRANSITION и т.д.)
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(32.dp),
+                        color = Background,
+                        strokeWidth = 3.dp
+                    )
+                }
+//                Icon(
+//                    modifier = Modifier.size(46.dp),
+//                    painter = if (isPlaying)
+//                        painterResource(
+//                            id = R.drawable.pause
+//                        ) else painterResource(id = R.drawable.play),
+//                    contentDescription = stringResource(id = R.string.pause),
+//                    tint = Background
+//                )
             }
             IconButton(
                 enabled = hasNext,
