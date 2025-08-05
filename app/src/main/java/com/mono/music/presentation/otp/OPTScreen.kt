@@ -1,6 +1,9 @@
 package com.mono.music.presentation.otp
 
+import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,6 +21,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -33,6 +37,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -59,11 +64,15 @@ import com.mono.music.R
 import com.mono.music.navigation.screen.LoginNavGraph
 import com.mono.music.presentation.destinations.EditProfileScreenDestination
 import com.mono.music.presentation.destinations.TariffsScreenDestination
+import com.mono.music.ui.components.CustomButton
 import com.mono.music.ui.components.LoadingView
+import com.mono.music.ui.components.toolbar.CollapsingToolbarScaffoldScopeInstance.align
+import com.mono.music.ui.theme.AlbumCoverBlackBG
 import com.mono.music.ui.theme.GrayTextColor
 import com.mono.music.ui.theme.SFFontFamily
 import com.mono.music.ui.theme.Surface
 import com.mono.music.ui.theme.WhiteTextColor
+import com.mono.music.ui.theme.Yellow
 import com.mono.music.ui.utils.clickWithoutIndication
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
@@ -84,8 +93,6 @@ fun OTPScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
 
-    val focusRequester = remember { FocusRequester() }
-
     val (code, onCodeChange) = remember {
         mutableStateOf("")
     }
@@ -102,6 +109,9 @@ fun OTPScreen(
     val resendAllowed = verificationViewModel.resendAllowed
     val resendTime = verificationViewModel.timeLeftToResend
 
+
+    var isNotValid by remember { mutableStateOf(false) }
+
     LaunchedEffect(uiState.failure) {
         if (uiState.failure) {
             scope.launch {
@@ -109,7 +119,6 @@ fun OTPScreen(
                     uiState.errorMessage
                 )
             }
-
             verificationViewModel.updateToDefault()
         }
 
@@ -154,29 +163,13 @@ fun OTPScreen(
             }
         },
         containerColor = Color.Transparent,
-        modifier = Modifier
-            .pointerInput(Unit) {
-                detectTapGestures {
-                    focusManager.clearFocus()
-                    keyboardController?.hide()
-                }
-            },
-    ) { padding ->
 
+
+        ) { padding ->
         Box(
             modifier = Modifier
                 .safeDrawingPadding()
         ) {
-            IconButton(modifier = Modifier
-                .padding(vertical = 10.dp)
-                .align(Alignment.TopStart),
-                onClick = { navigator.navigateUp() }) {
-                Icon(
-                    tint = Color.White,
-                    painter = painterResource(id = R.drawable.left_arrow),
-                    contentDescription = null
-                )
-            }
 
             Column(
                 modifier = Modifier
@@ -184,9 +177,10 @@ fun OTPScreen(
                     .padding(20.dp)
             ) {
 
+
                 Image(
                     modifier = Modifier
-                        .padding(top = 70.dp)
+                        .padding(top = 74.dp)
                         .align(Alignment.CenterHorizontally),
                     painter = painterResource(id = R.drawable.ic_mono_logo_big),
                     contentDescription = "ic_mono_logo_big",
@@ -227,7 +221,7 @@ fun OTPScreen(
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     ),
-                    modifier = Modifier.padding(top = 60.dp)
+                    modifier = Modifier.padding(top = 56.dp)
                 )
 
                 BasicTextField(
@@ -241,8 +235,7 @@ fun OTPScreen(
                     onValueChange = {
                         if (it.length > 6) return@BasicTextField
                         onCodeChange(it)
-                        if (it.length == 6) verificationViewModel.verify(phone, it)
-
+                        isNotValid = false
                     },
                     decorationBox = {
                         Row(horizontalArrangement = Arrangement.Center) {
@@ -270,9 +263,23 @@ fun OTPScreen(
                     }),
                 )
 
+                if (isNotValid) {
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = stringResource(R.string.must_not_be_empty),
+                        style = TextStyle(
+                            fontSize = 14.sp,
+                            fontFamily = SFFontFamily,
+                            fontWeight = FontWeight(400),
+                            color = Red,
+                            textAlign = TextAlign.Center,
+                        )
+                    )
+                }
+
                 if (isError) {
                     Spacer(modifier = Modifier.height(10.dp))
-
                     Text(
                         modifier = Modifier.padding(horizontal = 20.dp),
                         text = stringResource(R.string.invalid_code_desc),
@@ -289,9 +296,27 @@ fun OTPScreen(
 
                 }
 
+                CustomButton(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 20.dp),
+                    text = R.string.confirm,
+                    onClick = {
+                        if (code.length == 6) {
+                            verificationViewModel.verify(phone, code)
+                            focusManager.clearFocus()
+                            keyboardController?.hide()
+                        } else isNotValid = true
+                    },
+                    containerColor = Yellow,
+                    contentColor = AlbumCoverBlackBG,
+                    shape = MaterialTheme.shapes.small
+
+                )
+
                 Row(
                     modifier = Modifier
-                        .padding(20.dp)
+                        .padding(12.dp)
                         .align(Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -338,21 +363,19 @@ fun OTPScreen(
                         )
                     }
                 }
+            }
 
-
-//            CustomButton(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(top = 20.dp),
-//                text = R.string.continue_string,
-//                onClick = {
-//                    loginViewModel.loginUser(phone.trim())
-//                },
-//                containerColor = Yellow,
-//                contentColor = AlbumCoverBlackBG,
-//                shape = MaterialTheme.shapes.small
-//
-//            )
+            IconButton(
+                modifier = Modifier
+                    .padding(vertical = 10.dp),
+                onClick = {
+                    navigator.navigateUp()
+                }) {
+                Icon(
+                    tint = White,
+                    painter = painterResource(id = R.drawable.left_arrow),
+                    contentDescription = null
+                )
             }
         }
         if (uiState.loading) {

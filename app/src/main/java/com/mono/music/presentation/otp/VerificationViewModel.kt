@@ -69,6 +69,7 @@ class VerificationViewModel @Inject constructor(
             try {
                 val res = userRepository.verifyOTPAndProceed(phone, code)
                 saveTokens(res)
+
                 if (res.user?.firstTime == true) {
                     _uiState.update { it.updateToIsVerifiedToDetails() }
                 }else{

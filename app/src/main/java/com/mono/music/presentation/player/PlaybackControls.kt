@@ -108,9 +108,6 @@ fun PlaybackControls(
     }
 
 
-    LaunchedEffect (realPlayerState.value){
-        Log.e("PLAYER_STATE___", "PlaybackControls: ${realPlayerState.value}", )
-    }
 
     LaunchedEffect(currentMediaProgress) {
         if (draggingProgress != null) {
@@ -247,22 +244,12 @@ fun PlaybackControls(
                         tint = Background
                     )
                 } else {
-                    // Для всех остальных состояний (BUFFERING, IDLE, MEDIA_ITEM_TRANSITION и т.д.)
                     CircularProgressIndicator(
                         modifier = Modifier.size(32.dp),
                         color = Background,
                         strokeWidth = 3.dp
                     )
                 }
-//                Icon(
-//                    modifier = Modifier.size(46.dp),
-//                    painter = if (isPlaying)
-//                        painterResource(
-//                            id = R.drawable.pause
-//                        ) else painterResource(id = R.drawable.play),
-//                    contentDescription = stringResource(id = R.string.pause),
-//                    tint = Background
-//                )
             }
             IconButton(
                 enabled = hasNext,

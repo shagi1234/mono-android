@@ -143,5 +143,7 @@
     <string name="more_albums">More Albums</string>
     <string name="more_playlists">More Playlists</string>
     <string name="more_artists">More Artists</string>
+    <string name="confirm">Confirm</string>
+
 
 </resources>

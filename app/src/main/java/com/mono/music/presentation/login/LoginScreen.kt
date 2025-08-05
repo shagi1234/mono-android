@@ -9,12 +9,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
@@ -62,6 +65,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
@@ -70,17 +74,21 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.mono.music.R
 import com.mono.music.navigation.screen.LoginNavGraph
 import com.mono.music.presentation.destinations.OTPScreenDestination
+import com.mono.music.presentation.onboarding.OnBoardingScreen
 import com.mono.music.ui.components.CollapsingSmallTopAppBar
 import com.mono.music.ui.components.CustomButton
 import com.mono.music.ui.components.CustomTextField
 import com.mono.music.ui.components.LoadingView
 import com.mono.music.ui.components.clearFocusOnKeyboardDismiss
 import com.mono.music.ui.theme.AlbumCoverBlackBG
+import com.mono.music.ui.theme.DialogBackground
 import com.mono.music.ui.theme.GrayTextColor
+import com.mono.music.ui.theme.MusifyTheme
 import com.mono.music.ui.theme.SFFontFamily
 import com.mono.music.ui.theme.Surface
 import com.mono.music.ui.theme.WhiteTextColor
 import com.mono.music.ui.theme.Yellow
+import com.mono.music.ui.utils.UIState
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.launch
@@ -91,7 +99,6 @@ import kotlinx.coroutines.launch
 fun LoginScreen(
     navigator: DestinationsNavigator
 ) {
-
     val loginViewModel = hiltViewModel<LoginViewModel>()
 
     val uiState by loginViewModel.uiState.collectAsState()
@@ -125,7 +132,6 @@ fun LoginScreen(
         if (uiState.success) {
             navigator.navigate(OTPScreenDestination("+993$phone"))
             loginViewModel.updateToDefault()
-
         }
 
     }
@@ -156,19 +162,20 @@ fun LoginScreen(
                 }
             },
 
-    ) { padding ->
+        ) { padding ->
 
 
         Column(
             modifier = Modifier
                 .safeDrawingPadding()
-                .padding(20.dp)
+                .padding(all = 20.dp)
                 .verticalScroll(rememberScrollState())
         ) {
 
             Image(
                 modifier = Modifier
-                    .padding(top = 70.dp)
+
+                    .padding(top = 74.dp)
                     .align(Alignment.CenterHorizontally),
                 painter = painterResource(id = R.drawable.ic_mono_logo_big),
                 contentDescription = "ic_mono_logo_big",
@@ -211,7 +218,7 @@ fun LoginScreen(
                     fontWeight = FontWeight.Bold
                 ),
                 modifier = Modifier
-                    .padding(top = 60.dp)
+                    .padding(top = 56.dp)
             )
             CustomTextField(
                 modifier = Modifier
@@ -262,9 +269,9 @@ fun LoginScreen(
                     }
                 },
                 colors = TextFieldDefaults.colors(
-                    unfocusedContainerColor = Surface,
-                    focusedContainerColor = Surface,
-                    disabledContainerColor = Surface,
+                    unfocusedContainerColor = DialogBackground,
+                    focusedContainerColor = DialogBackground,
+                    disabledContainerColor = DialogBackground,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
                     disabledIndicatorColor = Color.Transparent,
@@ -277,11 +284,11 @@ fun LoginScreen(
                 maxLines = 1,
                 keyboardActions = KeyboardActions(
                     onDone = {
-                        if (phone.trim().length == 8){
+                        if (phone.trim().length == 8) {
                             focusManager.clearFocus()
                             keyboardController?.hide()
                             loginViewModel.loginUser(phone.trim())
-                        }else{
+                        } else {
                             isNotValid = true
                         }
 
@@ -310,11 +317,11 @@ fun LoginScreen(
                     .padding(top = 20.dp),
                 text = R.string.continue_string,
                 onClick = {
-                    if (phone.trim().length == 8){
+                    if (phone.trim().length == 8) {
                         focusManager.clearFocus()
                         keyboardController?.hide()
                         loginViewModel.loginUser(phone.trim())
-                    }else{
+                    } else {
                         isNotValid = true
                     }
                 },

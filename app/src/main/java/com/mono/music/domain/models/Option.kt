@@ -9,6 +9,4 @@ data class Option(
     val image: String = "",
     val days: Long = 0L,
     val price: Long = 0L,
-){
-
-}
+)

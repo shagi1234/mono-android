@@ -141,6 +141,8 @@
     <string name="more_albums">Другие Альбомы</string>
     <string name="more_playlists">Другие Плэйлисты</string>
     <string name="more_artists">Другие Исполнители</string>
+    <string name="confirm">Подтверждать</string>
+
 
 
 </resources>

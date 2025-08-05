@@ -14,6 +14,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mono.music.ui.theme.DialogBackground
+import com.mono.music.ui.theme.GrayTextColor
+import com.mono.music.ui.theme.Red
 import com.mono.music.ui.theme.Surface
 
 
@@ -34,21 +37,20 @@ fun CharView(
         else -> text[index].toString()
     }
 
+    val border = if (isError) Red else if (isFocused || char.isNotEmpty() ) MaterialTheme.colorScheme.primary else DialogBackground
 
-    val border = if (isError) MaterialTheme.colorScheme.primary else if (isFocused || char.isNotEmpty() ) MaterialTheme.colorScheme.primary else Surface
-
-    val background =  Surface
+    val background =  DialogBackground
     Text(
         modifier = Modifier
             .width(itemWidth)
             .background(
-                background, shape = MaterialTheme.shapes.medium
+                background, shape = MaterialTheme.shapes.extraSmall
             )
-            .border(1.dp, border, MaterialTheme.shapes.medium)
-            .padding(15.dp, 20.dp),
+            .border(0.dp, border, MaterialTheme.shapes.extraSmall)
+            .padding(horizontal = 15.dp, vertical = 20.dp),
         text = char,
-        color = MaterialTheme.colorScheme.onBackground,
-        style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Medium),
+        color = GrayTextColor,
+        style = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.W400),
         textAlign = TextAlign.Center
     )
 }

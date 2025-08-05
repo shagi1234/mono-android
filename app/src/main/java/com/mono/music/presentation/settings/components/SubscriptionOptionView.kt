@@ -24,6 +24,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mono.music.R
@@ -39,9 +40,10 @@ fun SubscriptionOptionView(
     option: Option,
     onClick: () -> Unit
 ) {
-    Row(modifier = Modifier
-        .clickable { onClick() }
-        .padding(15.dp, 13.dp),
+    Row(
+        modifier = Modifier
+            .clickable { onClick() }
+            .padding(15.dp, 13.dp),
         horizontalArrangement = Arrangement.spacedBy(15.dp),
         verticalAlignment = Alignment.CenterVertically) {
         Icon(
@@ -66,7 +68,7 @@ fun SubscriptionOptionView(
                 color = WhiteTextColor,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
-                )
+            )
             Text(
                 text = stringResource(id = R.string.manats, option.price),
                 fontSize = 12.sp,
@@ -81,8 +83,12 @@ fun SubscriptionOptionView(
 
 
 
-        Icon(modifier = Modifier
-            .size(14.dp), painter = painterResource(id = R.drawable.right_arrow), contentDescription = "See more icon", tint = WhiteTextColor
+        Icon(
+            modifier = Modifier
+                .size(14.dp),
+            painter = painterResource(id = R.drawable.right_arrow),
+            contentDescription = "See more icon",
+            tint = WhiteTextColor
         )
 
 
@@ -98,17 +104,19 @@ fun UpdatedSubscriptionOptionView(
 ) {
     Row(
         modifier = Modifier
-            .clip(MaterialTheme.shapes.medium)
+            .clip(MaterialTheme.shapes.small)
             .border(1.dp, if (selected) Yellow else TransparentColor, MaterialTheme.shapes.medium)
             .background(MaterialTheme.colorScheme.onBackground.copy(alpha = 0.1f))
             .clickable { onClick() }
-            .padding(12.dp, 16.dp),
+            .padding(horizontal = 12.dp, vertical = 20.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.Top) {
 
         Icon(
             modifier = Modifier.size(24.dp),
-            painter = if(selected)painterResource(id = R.drawable.ic_check_circle_active) else painterResource(id = R.drawable.ic_check_circle),
+            painter = if (selected) painterResource(id = R.drawable.ic_check_circle_active) else painterResource(
+                id = R.drawable.ic_check_circle
+            ),
             contentDescription = "button",
             tint = Color.Unspecified
         )
@@ -152,7 +160,6 @@ fun UpdatedSubscriptionOptionView(
         }
 
 
-
     }
 }
 
@@ -167,7 +174,7 @@ fun FreeSubscriptionOptionView(
         Image(
             modifier = Modifier
                 .fillMaxSize()
-                .clip(MaterialTheme.shapes.medium),
+                .clip(MaterialTheme.shapes.small),
             painter = painterResource(id = R.drawable.bg_gift_box),
             contentScale = ContentScale.Crop,
             contentDescription = null
@@ -176,7 +183,7 @@ fun FreeSubscriptionOptionView(
         Row(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-//                .border(1.dp, if (selected) Yellow else TransparentColor, MaterialTheme.shapes.medium)
+                .border(1.dp, if (selected) Yellow else TransparentColor, MaterialTheme.shapes.medium)
                 .clickable { onClick() }
                 .padding(12.dp, 20.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -184,7 +191,9 @@ fun FreeSubscriptionOptionView(
 
             Icon(
                 modifier = Modifier.size(24.dp),
-                painter = if(selected)painterResource(id = R.drawable.ic_check_circle_active) else painterResource(id = R.drawable.ic_check_circle),
+                painter = if (selected) painterResource(id = R.drawable.ic_check_circle_active) else painterResource(
+                    id = R.drawable.ic_check_circle
+                ),
                 contentDescription = "button",
                 tint = MaterialTheme.colorScheme.background
 
@@ -218,8 +227,23 @@ fun FreeSubscriptionOptionView(
             }
 
 
-
         }
     }
+
+}
+
+@Preview
+@Composable
+fun PaymentItemPreview() {
+    val mockOption = Option(
+        id = 0L,
+        name = "Premium 1 months",
+        image = "", days = 30,
+        price = 15
+    )
+    FreeSubscriptionOptionView(
+        option = mockOption, selected = true
+
+    ) {}
 
 }

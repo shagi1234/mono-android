@@ -294,7 +294,8 @@ fun AppNavGraph(
                     navController.navigate(TariffsScreenDestination)
                 }
             }
-        } else if (loggedIn == false) {
+        }
+        else if (loggedIn == false) {
             DestinationsNavHost(
                 navController = navController, navGraph = NavGraphs.login, modifier = Modifier,
                 startRoute = OnBoardingScreenDestination, engine = onBoardingNavHostEngine
