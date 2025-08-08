@@ -1,7 +1,6 @@
 package com.mono.music.presentation.otp
 
 import android.os.CountDownTimer
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -13,7 +12,9 @@ import com.mono.music.data.datastore.PreferenceDataStoreConstants.FIRST_TIME_KEY
 import com.mono.music.data.datastore.PreferenceDataStoreConstants.LOGGED_IN_KEY
 import com.mono.music.data.datastore.PreferenceDataStoreConstants.NAME_KEY
 import com.mono.music.data.datastore.PreferenceDataStoreConstants.PHONE_KEY
+import com.mono.music.data.datastore.PreferenceDataStoreConstants.PLAN_SELECTED_KEY
 import com.mono.music.data.datastore.PreferenceDataStoreConstants.REFRESH_TOKEN_KEY
+import com.mono.music.data.datastore.PreferenceDataStoreConstants.REGISTER_COMPLETED_KEY
 import com.mono.music.data.datastore.PreferenceDataStoreConstants.VALID_UNTIL_KEY
 import com.mono.music.data.datastore.PreferenceDataStoreHelper
 import com.mono.music.domain.models.Token
@@ -23,6 +24,8 @@ import com.mono.music.ui.utils.getFormattedCounTimeShort
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -39,16 +42,20 @@ class VerificationViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(VerifyUIState())
     val uiState: StateFlow<VerifyUIState> = _uiState
 
-    var timer = createTimer()
+    private var timer = createTimer()
     var timeLeftToResend by mutableStateOf("00:00")
     var resendAllowed by mutableStateOf(false)
-    var retryCount by mutableStateOf(0)
+    private var retryCount by mutableStateOf(0)
+
+    private val _isTariffActive = MutableStateFlow(false)
+    val isTariffActive = _isTariffActive.asStateFlow()
+
 
     init {
         startTimer()
     }
 
-    fun loginUser(phone: String) {
+    fun resendCode(phone: String) {
         incRetryCount()
         _uiState.update { it.updateToLoading() }
         viewModelScope.launch {
@@ -62,23 +69,24 @@ class VerificationViewModel @Inject constructor(
         }
     }
 
-    fun verify(phone: String, code: String) {
-
+    suspend fun verify(phone: String, code: String) {
         _uiState.update { it.updateToLoading() }
-        viewModelScope.launch {
-            try {
-                val res = userRepository.verifyOTPAndProceed(phone, code)
-                saveTokens(res)
+        try {
+            val res = userRepository.verifyOTPAndProceed(phone, code)
+            saveTokens(res)
 
-                if (res.user?.firstTime == true) {
-                    _uiState.update { it.updateToIsVerifiedToDetails() }
-                }else{
-                    res.user?.let { saveUserData(it) }
-                    _uiState.update { it.updateToIsVerifiedToApp() }
+            if (res.user?.firstTime == true) {
+                _uiState.update { it.updateToIsVerifiedToDetails() }
+            } else {
+                res.user?.let {
+                    saveUserData(it)
+                    checkTariffStatus(validUntil = it.validUntil)
                 }
-            } catch (e: Exception) {
-                _uiState.update { it.updateToFailure(e.message.toString()) }
+
+                _uiState.update { it.updateToIsVerifiedToApp() }
             }
+        } catch (e: Exception) {
+            _uiState.update { it.updateToFailure(e.message.toString()) }
         }
     }
 
@@ -86,30 +94,54 @@ class VerificationViewModel @Inject constructor(
         _uiState.update { it.updateToDefault() }
     }
 
-    suspend fun saveUserData(user: User){
-        preferenceDataStoreHelper.putPreference(PHONE_KEY, "+993"+user.phone)
+    private suspend fun saveUserData(user: User) {
+        preferenceDataStoreHelper.putPreference(PHONE_KEY, "+993" + user.phone)
         preferenceDataStoreHelper.putPreference(NAME_KEY, user.name)
         preferenceDataStoreHelper.putPreference(PHONE_KEY, user.phone)
         preferenceDataStoreHelper.putPreference(BIRTDAY_KEY, user.birthday)
         preferenceDataStoreHelper.putPreference(VALID_UNTIL_KEY, user.validUntil)
         preferenceDataStoreHelper.putPreference(FIRST_TIME_KEY, user.firstTime.toString())
+
+
     }
 
-    fun saveTokens(token: Token) {
+    private fun checkTariffStatus(validUntil: String?) {
+        viewModelScope.launch {
+            val isActive = validUntil?.let { checkIsValid(it) } ?: false
+            _isTariffActive.value = isActive
+
+            preferenceDataStoreHelper.putPreference(PLAN_SELECTED_KEY, isActive)
+        }
+    }
+
+    private fun checkIsValid(validUntil: String): Boolean {
+
+        if (validUntil == "") return false
+        val currentDate = LocalDate.now()
+        val futureDate = LocalDate.parse(validUntil)
+
+        return if (currentDate < futureDate) {
+            true
+        } else if (currentDate > futureDate) {
+            false
+        } else {
+            false
+        }
+    }
+
+
+    private fun saveTokens(token: Token) {
         viewModelScope.launch {
             preferenceDataStoreHelper.putPreference(REFRESH_TOKEN_KEY, token.refresh)
             preferenceDataStoreHelper.putPreference(ACCESS_TOKEN_KEY, token.access)
         }
     }
 
-    fun shownTheError() {
-        _uiState.value = VerifyUIState()
-    }
-
-    fun loggedInTheUser() {
+    private fun setIsRegistered() {
         _uiState.value = VerifyUIState()
         viewModelScope.launch {
             preferenceDataStoreHelper.putPreference(LOGGED_IN_KEY, true)
+            preferenceDataStoreHelper.putPreference(REGISTER_COMPLETED_KEY, true)
         }
     }
 
@@ -118,41 +150,38 @@ class VerificationViewModel @Inject constructor(
         cancelTimer()
     }
 
-    fun startTimer(){
+    private fun startTimer() {
         resendAllowed = false
         timer.start()
     }
 
-    fun cancelTimer(){
+    private fun cancelTimer() {
         timer.cancel()
         resendAllowed = true
     }
 
-    fun createTimer(): CountDownTimer {
+    private fun createTimer(): CountDownTimer {
         val time = Calendar.getInstance()
         time.add(Calendar.SECOND, TIME)
         val timeInMillis = time.timeInMillis
-        val timer = object : CountDownTimer(timeInMillis - Calendar.getInstance().timeInMillis, 1000) {
+        val timer =
+            object : CountDownTimer(timeInMillis - Calendar.getInstance().timeInMillis, 1000) {
 
-            override fun onTick(millisUntilFinished: Long) {
-                timeLeftToResend = getFormattedCounTimeShort(millisUntilFinished)
+                override fun onTick(millisUntilFinished: Long) {
+                    timeLeftToResend = getFormattedCounTimeShort(millisUntilFinished)
+                }
+
+                override fun onFinish() {
+                    resendAllowed = true
+                }
+
             }
-
-            override fun onFinish() {
-                resendAllowed = true
-            }
-
-        }
         return timer
     }
 
 
-    private fun incRetryCount(){
+    private fun incRetryCount() {
         retryCount += 1
-    }
-
-    private fun resetRetryCount(){
-        retryCount = 0
     }
 
     companion object {
@@ -164,7 +193,6 @@ class VerificationViewModel @Inject constructor(
 data class VerifyUIState(
     val isVerifiedToApp: Boolean = false,
     val isVerifiedToDetails: Boolean = false,
-    val isVerifiedToTariffs: Boolean = false,
     val success: Boolean = false,
     val loading: Boolean = false,
     val failure: Boolean = false,
@@ -177,12 +205,9 @@ data class VerifyUIState(
     fun updateToIsVerifiedToApp(): VerifyUIState {
         return copy(isVerifiedToApp = true)
     }
+
     fun updateToIsVerifiedToDetails(): VerifyUIState {
         return copy(isVerifiedToDetails = true)
-    }
-
-    fun updateToIsVerifiedToTariffs(): VerifyUIState {
-        return copy(isVerifiedToTariffs = true)
     }
 
     fun updateToFailure(errorMessage: String = ""): VerifyUIState {
@@ -196,4 +221,6 @@ data class VerifyUIState(
             failure = false,
         )
     }
+
+
 }

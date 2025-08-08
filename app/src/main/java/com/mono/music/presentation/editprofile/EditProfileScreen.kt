@@ -60,25 +60,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.google.protobuf.Internal.BooleanList
 import com.mono.music.R
-import com.mono.music.domain.models.User
 import com.mono.music.navigation.screen.LoginNavGraph
+import com.mono.music.presentation.destinations.LoginTariffsScreenDestination
 import com.mono.music.presentation.profile.Gender
-import com.mono.music.presentation.profile.genders
-import com.mono.music.ui.components.CustomButton
-import com.mono.music.ui.components.CustomDatePickerDialog
 import com.mono.music.ui.components.LoadingView
-import com.mono.music.ui.components.clearFocusOnKeyboardDismiss
-import com.mono.music.ui.theme.AlbumCoverBlackBG
-import com.mono.music.ui.theme.DialogBackground
-import com.mono.music.ui.theme.GrayTextColor
-import com.mono.music.ui.theme.SFFontFamily
 import com.mono.music.ui.theme.Surface
-import com.mono.music.ui.theme.WhiteTextColor
-import com.mono.music.ui.theme.Yellow
-import com.mono.music.ui.utils.UIState
-import com.mono.music.ui.utils.clickWithoutIndication
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.launch
@@ -96,11 +83,14 @@ fun EditProfileScreen(
     val username by profileViewModel.name.observeAsState("")
     val birthday by profileViewModel.birthday.observeAsState("")
 
+    val isTariffActive by profileViewModel.isTariffActive.collectAsState()
+
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+
     LaunchedEffect(uiState.failure) {
         if (uiState.failure) {
             scope.launch {
@@ -111,6 +101,14 @@ fun EditProfileScreen(
             profileViewModel.updateToDefault()
         }
     }
+    LaunchedEffect(uiState.saved) {
+        if (uiState.saved) {
+            if (!isTariffActive) {
+                navigator.navigate(LoginTariffsScreenDestination)
+            }
+        }
+    }
+
     Image(
         modifier = Modifier.fillMaxSize(),
         painter = painterResource(id = R.drawable.bg_login),

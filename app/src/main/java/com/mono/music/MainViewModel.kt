@@ -4,7 +4,6 @@ package com.mono.music
 
 
 import android.util.Log
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
@@ -15,6 +14,8 @@ import com.mono.music.data.datastore.PreferenceDataStoreConstants.FIRST_TIME_KEY
 import com.mono.music.data.datastore.PreferenceDataStoreConstants.LOGGED_IN_KEY
 import com.mono.music.data.datastore.PreferenceDataStoreConstants.NAME_KEY
 import com.mono.music.data.datastore.PreferenceDataStoreConstants.PHONE_KEY
+import com.mono.music.data.datastore.PreferenceDataStoreConstants.PLAN_SELECTED_KEY
+import com.mono.music.data.datastore.PreferenceDataStoreConstants.REGISTER_COMPLETED_KEY
 import com.mono.music.data.datastore.PreferenceDataStoreConstants.VALID_UNTIL_KEY
 import com.mono.music.data.datastore.PreferenceDataStoreHelper
 import com.mono.music.domain.models.Message
@@ -55,7 +56,11 @@ class MainViewModel @Inject constructor(
     val uiState: StateFlow<BaseUIState<Any>> = _uiState.asStateFlow()
 
     val validUntil = preferenceDataStoreHelper.getPreference(VALID_UNTIL_KEY, "")
+    val planSelected = preferenceDataStoreHelper.getPreference(PLAN_SELECTED_KEY, false)
     val isFirstTime = preferenceDataStoreHelper.getPreference(FIRST_TIME_KEY, "")
+    val isRegisterCompleted = preferenceDataStoreHelper.getPreference(REGISTER_COMPLETED_KEY, false)
+
+    val isLoggedIn = preferenceDataStoreHelper.getPreference(LOGGED_IN_KEY, false)
 
     var option = MutableStateFlow(Option())
 
@@ -69,12 +74,7 @@ class MainViewModel @Inject constructor(
         return songRepository.getLocalPlaylists()
     }
 
-    val token = preferenceDataStoreHelper.getPreference(LOGGED_IN_KEY, false)
 
-    fun getLocale(): String {
-        return  runBlocking { preferenceDataStoreHelper.getFirstPreference(
-            PreferenceDataStoreConstants.LANGUAGE_KEY, "tk")}
-    }
 
     fun addNewPlaylist(name:String){
         _uiState.update { it.updateToPending() }

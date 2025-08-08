@@ -73,11 +73,27 @@ class TariffsViewModel @Inject constructor(
                     PreferenceDataStoreConstants.PROMO_SUCCESS_KEY, true
                 )
 
+                // Set plan as selected when promo code is successful
+                preferenceDataStoreHelper.putPreference(
+                    PreferenceDataStoreConstants.PLAN_SELECTED_KEY, true
+                )
+
                 _uiState.update { it.updateSuccessCheckPromoCode("Succeed") }
             } catch (e: Exception) {
                 Log.e("TAG", "getOptions: " + e.message)
                 _uiState.update { it.updateFailCheckPromoCode(e.message.toString()) }
             }
+        }
+    }
+
+    fun onPaymentSuccess(option: Option) {
+        viewModelScope.launch {
+            updateValidUntil(option)
+            // Set plan as selected when payment is successful
+            preferenceDataStoreHelper.putPreference(
+                PreferenceDataStoreConstants.PLAN_SELECTED_KEY, true
+            )
+            _uiState.update { it.updateToSubscribedToPremium() }
         }
     }
 
@@ -94,7 +110,7 @@ class TariffsViewModel @Inject constructor(
         }
     }
 
-    fun getUserData() {
+    private fun getUserData() {
         viewModelScope.launch {
             try {
                 val res = userRepository.getProfile()
@@ -105,13 +121,34 @@ class TariffsViewModel @Inject constructor(
         }
     }
 
-    suspend fun saveUserData(user: User){
+    private suspend fun saveUserData(user: User){
         preferenceDataStoreHelper.putPreference(PHONE_KEY, "+993"+user.phone)
         preferenceDataStoreHelper.putPreference(NAME_KEY, user.name)
         preferenceDataStoreHelper.putPreference(PHONE_KEY, user.phone)
         preferenceDataStoreHelper.putPreference(BIRTDAY_KEY, user.birthday)
         preferenceDataStoreHelper.putPreference(VALID_UNTIL_KEY, user.validUntil)
         preferenceDataStoreHelper.putPreference(FIRST_TIME_KEY, user.firstTime.toString())
+
+        // Check if the user has a valid tariff and update plan selection accordingly
+        val isValidTariff = checkIsValid(user.validUntil ?: "")
+        preferenceDataStoreHelper.putPreference(
+            PreferenceDataStoreConstants.PLAN_SELECTED_KEY, isValidTariff
+        )
+    }
+
+    private fun checkIsValid(validUntil:String): Boolean {
+
+        if (validUntil == "") return false
+        val currentDate = LocalDate.now()
+        val futureDate = LocalDate.parse(validUntil)
+
+        return if (currentDate < futureDate) {
+            true
+        } else if (currentDate > futureDate) {
+            false
+        } else {
+            false
+        }
     }
 
 
@@ -135,6 +172,10 @@ class TariffsViewModel @Inject constructor(
                 val res = userRepository.subscribeToFreePlan()
                 if (res.isSuccessful){
                     updateValidUntil(option)
+
+                    preferenceDataStoreHelper.putPreference(
+                        PreferenceDataStoreConstants.PLAN_SELECTED_KEY, true
+                    )
                     _uiState.update { it.updateToSubscribedToPremium() }
                 }else{
                     val gson = Gson()
@@ -149,7 +190,7 @@ class TariffsViewModel @Inject constructor(
         }
     }
 
-    fun updateValidUntil(option: Option ) {
+    private fun updateValidUntil(option: Option ) {
         val currentDate = LocalDate.now()
         val newDate = currentDate.plusDays(option.days)
         viewModelScope.launch {

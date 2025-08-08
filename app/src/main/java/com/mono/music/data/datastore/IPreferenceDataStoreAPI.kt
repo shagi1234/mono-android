@@ -28,4 +28,8 @@ object PreferenceDataStoreConstants {
     val BIRTDAY_KEY = stringPreferencesKey("BIRTDAY")
     val GENDER_KEY = stringPreferencesKey("GENDER")
     val LANGUAGE_KEY = stringPreferencesKey("LANGUAGE")
+
+    val REGISTER_COMPLETED_KEY = booleanPreferencesKey("REGISTER_COMPLETED_KEY")
+    val PLAN_SELECTED_KEY = booleanPreferencesKey("PLAN_SELECTED_KEY")
+
 }

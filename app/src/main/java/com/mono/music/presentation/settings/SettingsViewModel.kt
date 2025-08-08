@@ -13,6 +13,7 @@ import com.mono.music.data.datastore.PreferenceDataStoreConstants.FIRST_TIME_KEY
 import com.mono.music.data.datastore.PreferenceDataStoreConstants.LOGGED_IN_KEY
 import com.mono.music.data.datastore.PreferenceDataStoreConstants.NAME_KEY
 import com.mono.music.data.datastore.PreferenceDataStoreConstants.PHONE_KEY
+import com.mono.music.data.datastore.PreferenceDataStoreConstants.REGISTER_COMPLETED_KEY
 import com.mono.music.data.datastore.PreferenceDataStoreConstants.VALID_UNTIL_KEY
 import com.mono.music.data.datastore.PreferenceDataStoreHelper
 import com.mono.music.domain.models.Option
@@ -149,6 +150,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             withContext(Dispatchers.IO){
                 preferenceDataStoreHelper.putPreference(LOGGED_IN_KEY, false)
+                preferenceDataStoreHelper.putPreference(REGISTER_COMPLETED_KEY, false)
                 preferenceDataStoreHelper.clearAllPreference()
                 userRepository.clearDatabase()
             }

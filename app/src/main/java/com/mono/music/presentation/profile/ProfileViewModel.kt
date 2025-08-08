@@ -111,11 +111,7 @@ class ProfileViewModel @Inject constructor(
         savedStateHandle[GENDER] = gender.value
     }
 
-    fun loggedInTheUser() {
-        viewModelScope.launch {
-            preferenceDataStoreHelper.putPreference(LOGGED_IN_KEY, true)
-        }
-    }
+
 
     companion object {
         const val NAME = "NAME"

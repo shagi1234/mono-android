@@ -46,11 +46,9 @@ import com.mono.music.presentation.NavGraphs
 import com.mono.music.presentation.destinations.ArtistScreenDestination
 import com.mono.music.presentation.destinations.HomeScreenDestination
 import com.mono.music.presentation.destinations.LoginScreenDestination
-import com.mono.music.presentation.destinations.MyPlaylistsScreenDestination
 import com.mono.music.presentation.destinations.OnBoardingScreenDestination
 import com.mono.music.presentation.destinations.PlaylistScreenDestination
 import com.mono.music.presentation.destinations.ProfileScreenDestination
-import com.mono.music.presentation.destinations.SearchScreenDestination
 import com.mono.music.presentation.destinations.SettingsScreenDestination
 import com.mono.music.presentation.destinations.TariffsScreenDestination
 import com.mono.music.presentation.destinations.WebViewScreenDestination
@@ -65,7 +63,6 @@ import com.ramcosta.composedestinations.navigation.navigate
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
-
 @OptIn(
     ExperimentalMaterial3Api::class,
     ExperimentalMaterialNavigationApi::class,
@@ -73,7 +70,8 @@ import kotlin.math.roundToInt
 )
 @Composable
 fun AppNavGraph(
-    mainViewModel: MainViewModel, playerBottomSheet: SheetState
+    mainViewModel: MainViewModel,
+    playerBottomSheet: SheetState
 ) {
 
     val navController = rememberNavController()
@@ -82,20 +80,24 @@ fun AppNavGraph(
 
     var isNowPlayingScreenVisible by remember { mutableStateOf(false) }
 
-    val loggedIn by mainViewModel.token.collectAsState(initial = null)
+    val loggedIn by mainViewModel.isLoggedIn.collectAsState(initial = null)
     val validUntil by mainViewModel.validUntil.collectAsState(initial = null)
     val isFirstTime by mainViewModel.isFirstTime.collectAsState(initial = null)
+    val isRegisterCompleted by mainViewModel.isRegisterCompleted.collectAsState(initial = null)
+    val planSelected by mainViewModel.planSelected.collectAsState(initial = null)
+
 
     val startRoute = if (loggedIn == true) NavGraphs.root.startRoute else LoginScreenDestination
     val navBackStackEntry by navController.currentBackStackEntryAsState()
+
     val destination = navBackStackEntry?.destination?.route ?: startRoute.route
 
     var offsetX by remember { mutableStateOf(0f) }
     var offsetY by remember { mutableStateOf(0f) }
 
     var showSubscribe by remember { mutableStateOf(false) }
+
     val uiState by mainViewModel.uiState.collectAsState()
-    val option by mainViewModel.option.collectAsState()
 
     val onBoardingNavHostEngine = rememberAnimatedNavHostEngine(
         rootDefaultAnimations = RootNavGraphDefaultAnimations(
@@ -120,10 +122,21 @@ fun AppNavGraph(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
+
+
     LaunchedEffect(loggedIn) {
         if (loggedIn == true) {
             mainViewModel.getFreePlan()
         }
+    }
+    LaunchedEffect(validUntil, isFirstTime, loggedIn, isRegisterCompleted, planSelected)
+    {
+        Log.e("CHECK______", "validUntil: $validUntil")
+        Log.e("CHECK______", "isFirstTime: $isFirstTime")
+        Log.e("CHECK______", "loggedIn: $loggedIn")
+        Log.e("CHECK______", "isRegisterCompleted: $isRegisterCompleted")
+        Log.e("CHECK______", "planSlected: $planSelected")
+
     }
 
     LaunchedEffect(uiState.message) {
@@ -140,25 +153,17 @@ fun AppNavGraph(
     Box(
         contentAlignment = Alignment.BottomCenter
     ) {
-        if (loggedIn == true) {
+        if (loggedIn == true && isRegisterCompleted == true && planSelected==true) {
             LaunchedEffect(validUntil, isFirstTime) {
-                println("DEBG ${isFirstTime == ""}")
                 if (validUntil == null || isFirstTime == null || isFirstTime == "") {
                     mainViewModel.getUserData()
                     return@LaunchedEffect
                 }
-
                 val isNotValid = validUntil?.let {
                     !mainViewModel.checkIsValid(it)
                 } ?: false
-
-                if (isNotValid && isFirstTime == "true") {
-                    navController.navigate(TariffsScreenDestination)
-                } else {
-                    showSubscribe = isNotValid
-                }
+                showSubscribe = isNotValid
             }
-
 
             Box(
                 contentAlignment = Alignment.BottomCenter
@@ -294,12 +299,10 @@ fun AppNavGraph(
                     navController.navigate(TariffsScreenDestination)
                 }
             }
-        }
-        else if (loggedIn == false) {
+        } else if (loggedIn == false || isRegisterCompleted == false || planSelected ==false){
             DestinationsNavHost(
                 navController = navController, navGraph = NavGraphs.login, modifier = Modifier,
                 startRoute = OnBoardingScreenDestination, engine = onBoardingNavHostEngine
-
             )
         }
 

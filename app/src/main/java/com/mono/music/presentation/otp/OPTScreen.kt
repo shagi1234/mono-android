@@ -1,10 +1,6 @@
 package com.mono.music.presentation.otp
 
-import android.util.Log
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,7 +17,6 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,12 +35,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Red
 import androidx.compose.ui.graphics.Color.Companion.White
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -63,10 +56,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.mono.music.R
 import com.mono.music.navigation.screen.LoginNavGraph
 import com.mono.music.presentation.destinations.EditProfileScreenDestination
-import com.mono.music.presentation.destinations.TariffsScreenDestination
+import com.mono.music.presentation.destinations.LoginTariffsScreenDestination
 import com.mono.music.ui.components.CustomButton
 import com.mono.music.ui.components.LoadingView
-import com.mono.music.ui.components.toolbar.CollapsingToolbarScaffoldScopeInstance.align
 import com.mono.music.ui.theme.AlbumCoverBlackBG
 import com.mono.music.ui.theme.GrayTextColor
 import com.mono.music.ui.theme.SFFontFamily
@@ -112,6 +104,9 @@ fun OTPScreen(
 
     var isNotValid by remember { mutableStateOf(false) }
 
+    val isTariffActive by verificationViewModel.isTariffActive.collectAsState()
+
+
     LaunchedEffect(uiState.failure) {
         if (uiState.failure) {
             scope.launch {
@@ -124,25 +119,20 @@ fun OTPScreen(
 
     }
 
-
-    LaunchedEffect(uiState.isVerifiedToApp) {
-        if (uiState.isVerifiedToApp) {
-            verificationViewModel.loggedInTheUser()
-        }
-    }
-
+    //if is first time
     LaunchedEffect(uiState.isVerifiedToDetails) {
         if (uiState.isVerifiedToDetails) {
             navigator.navigate(EditProfileScreenDestination)
         }
     }
 
-    LaunchedEffect(uiState.isVerifiedToTariffs) {
-        if (uiState.isVerifiedToTariffs) {
-            navigator.navigate(TariffsScreenDestination)
+    //if is not first time
+    LaunchedEffect(uiState.isVerifiedToApp) {
+        if (uiState.isVerifiedToApp) {
+            if (!isTariffActive)
+                navigator.navigate(LoginTariffsScreenDestination)
         }
     }
-
 
     Image(
         modifier = Modifier.fillMaxSize(),
@@ -163,7 +153,6 @@ fun OTPScreen(
             }
         },
         containerColor = Color.Transparent,
-
 
         ) { padding ->
         Box(
@@ -303,7 +292,9 @@ fun OTPScreen(
                     text = R.string.confirm,
                     onClick = {
                         if (code.length == 6) {
-                            verificationViewModel.verify(phone, code)
+                            scope.launch {
+                                verificationViewModel.verify(phone, code)
+                            }
                             focusManager.clearFocus()
                             keyboardController?.hide()
                         } else isNotValid = true
@@ -323,7 +314,7 @@ fun OTPScreen(
                 ) {
                     Text(
                         modifier = Modifier.clickWithoutIndication {
-                            if (resendAllowed) verificationViewModel.loginUser(
+                            if (resendAllowed) verificationViewModel.resendCode(
                                 phone
                             )
                         },
@@ -353,7 +344,7 @@ fun OTPScreen(
                     } else {
                         Icon(
                             modifier = Modifier.clickWithoutIndication {
-                                verificationViewModel.loginUser(
+                                verificationViewModel.resendCode(
                                     phone
                                 )
                             },
@@ -390,11 +381,5 @@ fun OTPScreen(
 
 
         }
-
-//        SmsRetreiverUserConsent{ _, otpCode ->
-//            Log.d(VERIFY_TAG, otpCode)
-//            onCodeChange(otpCode)
-//            verificationViewModel.cancelTimer()
-//        }
     }
 }

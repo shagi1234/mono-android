@@ -105,7 +105,6 @@ fun OnBoardingScreen(
                 shape = MaterialTheme.shapes.small,
                 onClick = {
                     navigator?.navigate(LoginScreenDestination)
-//                    navigator?.navigate(TariffsScreenDestination)
                 },
                 contentPadding = PaddingValues(all = 16.dp),
                 colors = ButtonColors(
