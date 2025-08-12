@@ -60,7 +60,9 @@ import javax.inject.Inject
 class PlaybackService : MediaSessionService() {
 
     @Inject
-    lateinit var player: ExoPlayer
+    lateinit var playerFactory: ExoPlayerFactory
+
+    private lateinit var player: ExoPlayer
 
     @Inject
     lateinit var playerController: PlayerController
@@ -113,6 +115,7 @@ class PlaybackService : MediaSessionService() {
     }
 
     private fun initializePlayer() {
+        player = playerFactory.createPlayer()
         player.addListener(object : Player.Listener {
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                 Timber.d("Media item transition: ${mediaItem?.mediaId}, reason: $reason")
@@ -132,7 +135,6 @@ class PlaybackService : MediaSessionService() {
     }
 
     private fun initializeMediaSession() {
-        // Create session activity intent
         val sessionActivityPendingIntent = TaskStackBuilder.create(this).run {
             addNextIntent(Intent(this@PlaybackService, MainActivity::class.java))
             getPendingIntent(0, immutableFlag or FLAG_UPDATE_CURRENT)
@@ -189,7 +191,6 @@ class PlaybackService : MediaSessionService() {
             Timber.e(e, "Error updating notification")
         }
     }
-
 
 
     private fun createNotification(): Notification {

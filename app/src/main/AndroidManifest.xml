@@ -59,13 +59,20 @@
         <service
             android:name=".player.PlaybackService"
             android:foregroundServiceType="mediaPlayback"
-            android:enabled="true"
             android:exported="true">
             <intent-filter>
                 <action android:name="androidx.media3.session.MediaSessionService"/>
                 <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>
         </service>
+
+        <!-- Для кнопок на гарнитуре и блок-экране -->
+        <receiver android:name="androidx.media3.session.MediaButtonReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </receiver>
 
     </application>
 

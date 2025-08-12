@@ -252,5 +252,4 @@ class AppModule {
         return MyPlayer(player, context)
     }
 
-
 }

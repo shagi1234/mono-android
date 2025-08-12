@@ -1,5 +1,6 @@
 package com.mono.music.presentation.otp
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -129,9 +130,11 @@ fun OTPScreen(
     //if is not first time
     LaunchedEffect(uiState.isVerifiedToApp) {
         if (uiState.isVerifiedToApp) {
+            Log.e("TAG_____FUCKKK", "OTPScreen: ", )
             if (!isTariffActive)
                 navigator.navigate(LoginTariffsScreenDestination)
         }
+
     }
 
     Image(

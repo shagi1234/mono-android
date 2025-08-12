@@ -1,6 +1,7 @@
 package com.mono.music.presentation.otp
 
 import android.os.CountDownTimer
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -74,6 +75,7 @@ class VerificationViewModel @Inject constructor(
         try {
             val res = userRepository.verifyOTPAndProceed(phone, code)
             saveTokens(res)
+        Log.e("TAG_____FUCKKK", "verify: $res", )
 
             if (res.user?.firstTime == true) {
                 _uiState.update { it.updateToIsVerifiedToDetails() }
@@ -83,6 +85,7 @@ class VerificationViewModel @Inject constructor(
                     checkTariffStatus(validUntil = it.validUntil)
                 }
 
+                setIsRegistered()
                 _uiState.update { it.updateToIsVerifiedToApp() }
             }
         } catch (e: Exception) {
@@ -102,7 +105,6 @@ class VerificationViewModel @Inject constructor(
         preferenceDataStoreHelper.putPreference(VALID_UNTIL_KEY, user.validUntil)
         preferenceDataStoreHelper.putPreference(FIRST_TIME_KEY, user.firstTime.toString())
 
-
     }
 
     private fun checkTariffStatus(validUntil: String?) {
@@ -113,6 +115,7 @@ class VerificationViewModel @Inject constructor(
             preferenceDataStoreHelper.putPreference(PLAN_SELECTED_KEY, isActive)
         }
     }
+
 
     private fun checkIsValid(validUntil: String): Boolean {
 

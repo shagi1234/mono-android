@@ -235,6 +235,7 @@ class MyPlayer @Inject constructor(
                         .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                         .build()
                 )
+
                 .setAcceptsDelayedFocusGain(true)
                 .setOnAudioFocusChangeListener(this, handler)
                 .build()

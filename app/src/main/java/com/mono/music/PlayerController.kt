@@ -141,7 +141,7 @@ class PlayerController @Inject constructor(
         onTrackClick(song = track)
     }
 
-    fun startPlaybackService(context: Context) {
+    private fun startPlaybackService(context: Context) {
         val intent = Intent(context, PlaybackService::class.java)
 
         // For Android 12 (API 31) and above
@@ -304,7 +304,7 @@ class PlayerController @Inject constructor(
                 updatePlaybackState(state)
 
                 if (state == PlayerStates.STATE_END && myPlayer.getRepeatMode() == REPEAT_MODE_ALL) {
-                    onTrackSelected(0)
+                     onTrackSelected(0)
                 }
             }
         } finally {

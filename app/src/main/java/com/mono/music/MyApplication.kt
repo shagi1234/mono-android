@@ -10,7 +10,7 @@ import androidx.media3.session.SessionToken
 import com.mono.music.player.PlaybackService
 import com.mono.music.ui.utils.LocaleHelper
 import dagger.hilt.android.HiltAndroidApp
-
+import timber.log.Timber
 
 
 @HiltAndroidApp
@@ -24,6 +24,9 @@ class MyApplication : Application(){
 
     override fun attachBaseContext(base: Context?) {
         val config = Resources.getSystem().configuration
+        if (BuildConfig.DEBUG) {
+            Timber.plant(Timber.DebugTree())
+        }
         val locale = config.locales.get(0)
         base?.let {
             when (locale.language) {
