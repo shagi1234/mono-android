@@ -31,5 +31,6 @@ object PreferenceDataStoreConstants {
 
     val REGISTER_COMPLETED_KEY = booleanPreferencesKey("REGISTER_COMPLETED_KEY")
     val PLAN_SELECTED_KEY = booleanPreferencesKey("PLAN_SELECTED_KEY")
+    val SELECTED_TRACK_KEY = stringPreferencesKey("SELECTED_TRACK_KEY")
 
 }

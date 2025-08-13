@@ -54,7 +54,6 @@ import java.io.IOException
 import java.net.URL
 import javax.inject.Inject
 
-@Suppress("UNUSED_CHANGED_VALUE")
 @AndroidEntryPoint
 @OptIn(UnstableApi::class)
 class PlaybackService : MediaSessionService() {
@@ -62,34 +61,21 @@ class PlaybackService : MediaSessionService() {
     @Inject
     lateinit var playerFactory: ExoPlayerFactory
 
-    private lateinit var player: ExoPlayer
-
     @Inject
     lateinit var playerController: PlayerController
 
-    private var isHandlingAction = false
-    private val actionLock = Any()
-    private var lastActionTimes = mutableMapOf<String, Long>()
-    private val ACTION_DEBOUNCE_TIME = 300L // milliseconds
+    private lateinit var player: ExoPlayer
+
     private lateinit var mediaSession: MediaSession
+
     private val coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
-    private var currentSong: Song? = null
-    private var currentArtwork: Bitmap? = null
-    private var currentArtworkUri: android.net.Uri? = null
 
     companion object {
-        private const val NOTIFICATION_ID = 123
+        private const val NOTIFICATION_ID = 1002
         private const val CHANNEL_ID = "mono_session_notification_channel_id"
-        private val immutableFlag = FLAG_IMMUTABLE
-        const val REQUEST_CODE_POST_NOTIFICATIONS = 1234
-
-        // Action keys for notification controls
-        const val ACTION_PLAY = "com.mono.music.ACTION_PLAY"
-        const val ACTION_PAUSE = "com.mono.music.ACTION_PAUSE"
-        const val ACTION_PREVIOUS = "com.mono.music.ACTION_PREVIOUS"
-        const val ACTION_NEXT = "com.mono.music.ACTION_NEXT"
-        const val ACTION_STOP = "com.mono.music.ACTION_STOP"
     }
+
+    // ========== LIFECYCLE METHODS ==========
 
     override fun onCreate() {
         super.onCreate()
@@ -97,165 +83,63 @@ class PlaybackService : MediaSessionService() {
 
         initializePlayer()
         initializeMediaSession()
-        setupPlayerListener()
+        createNotificationChannel()
 
-        val notification = createNotification()
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(
-                NOTIFICATION_ID,
-                notification,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
-            )
-        } else {
-            startForeground(NOTIFICATION_ID, notification)
-        }
-
-        setListener(MediaSessionServiceListener())
     }
+
+
+    override fun onDestroy() {
+        Timber.d("PlaybackService onDestroy")
+        // Освобождаем ресурсы в правильном порядке
+        coroutineScope.cancel()
+        mediaSession.release()
+        player.release()
+
+        super.onDestroy()
+    }
+
+    // ========== REQUIRED MediaSessionService METHODS ==========
+
+    override fun onGetSession(controllerInfo: ControllerInfo): MediaSession {
+        return mediaSession
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        // Останавливаем сервис если музыка не играет
+        if (!player.playWhenReady || player.mediaItemCount == 0) {
+            stopSelf()
+        }
+    }
+
+    // ========== INITIALIZATION METHODS ==========
 
     private fun initializePlayer() {
         player = playerFactory.createPlayer()
-        player.addListener(object : Player.Listener {
-            override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-                Timber.d("Media item transition: ${mediaItem?.mediaId}, reason: $reason")
-                updateNotification()
-            }
-
-            override fun onIsPlayingChanged(isPlaying: Boolean) {
-                Timber.d("onIsPlayingChanged: $isPlaying")
-                updateNotification()
-            }
-
-            override fun onPlaybackStateChanged(playbackState: Int) {
-                Timber.d("onPlaybackStateChanged: $playbackState")
-                updateNotification()
-            }
-        })
     }
 
     private fun initializeMediaSession() {
-        val sessionActivityPendingIntent = TaskStackBuilder.create(this).run {
-            addNextIntent(Intent(this@PlaybackService, MainActivity::class.java))
-            getPendingIntent(0, immutableFlag or FLAG_UPDATE_CURRENT)
-        }
+        val sessionActivityPendingIntent = createSessionActivityPendingIntent()
 
-        // Create media session
         mediaSession = MediaSession.Builder(this, player)
             .setCallback(MediaLibrarySessionCallback(this, playerController))
-            .setSessionActivity(sessionActivityPendingIntent).build()
+            .setSessionActivity(sessionActivityPendingIntent)
+            .build()
     }
 
-    private fun setupPlayerListener() {
-        // Track the current song
-        coroutineScope.launch {
-            playerController.tracks.forEach { song ->
-                if (song.isSelected) {
-                    currentSong = song
-                }
-            }
-        }
-    }
-
-    @SuppressLint("MissingPermission")
-    private fun updateNotification() {
-        if (!::mediaSession.isInitialized) return
-
-        try {
-            // Get current media item
-            val mediaItem = player.currentMediaItem
-            val artworkUri = mediaItem?.mediaMetadata?.artworkUri
-
-            // Check if we need to load new artwork
-            if (artworkUri != null && artworkUri != currentArtworkUri) {
-                // We need to load on a background thread
-                coroutineScope.launch {
-                    val bitmap = loadArtworkWithFallback(artworkUri)
-                    currentArtwork = bitmap
-                    currentArtworkUri = artworkUri
-
-                    // Now create and show notification with the loaded artwork
-                    val notification = createNotification()
-                    val notificationManager =
-                        getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                    notificationManager.notify(NOTIFICATION_ID, notification)
-                }
-            } else {
-                // We can use cached artwork or no artwork
-                val notification = createNotification()
-                val notificationManager =
-                    getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                notificationManager.notify(NOTIFICATION_ID, notification)
-            }
-        } catch (e: Exception) {
-            Timber.e(e, "Error updating notification")
-        }
-    }
-
-
-    private fun createNotification(): Notification {
-        ensureNotificationChannel()
-
-        val isPlaying = player.isPlaying
-        val mediaItem = player.currentMediaItem
-        val title = mediaItem?.mediaMetadata?.title ?: getString(R.string.app_name)
-        val artist = mediaItem?.mediaMetadata?.artist ?: ""
-        val albumTitle = mediaItem?.mediaMetadata?.albumTitle ?: ""
-
-        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle(title)
-            .setContentText(artist)
-            .setSubText(albumTitle)
-            .setSmallIcon(R.drawable.playing_on_device_ic)
-            .setContentIntent(getContentIntent())
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setDeleteIntent(getStopIntent())
-
-        if (currentArtwork != null) {
-            builder.setLargeIcon(currentArtwork)
-        }
-
-        val compactActions = mutableListOf<Int>()
-        var actionIndex = 0
-
-        if (isPlaying) {
-            builder.addAction(R.drawable.pause, getString(R.string.pause), getPauseIntent())
-        } else {
-            builder.addAction(R.drawable.play, getString(R.string.play_all), getPlayIntent())
-        }
-        compactActions.add(actionIndex++) // Всегда показываем play/pause
-
-        if (player.hasPreviousMediaItem()) {
-            builder.addAction(
-                androidx.media3.session.R.drawable.media3_icon_previous,
-                getString(androidx.media3.session.R.string.media3_controls_seek_to_previous_description),
-                getPreviousIntent()
+    private fun createSessionActivityPendingIntent(): PendingIntent {
+        return TaskStackBuilder.create(this).run {
+            addNextIntent(Intent(this@PlaybackService, MainActivity::class.java))
+            getPendingIntent(
+                0,
+                FLAG_IMMUTABLE or FLAG_UPDATE_CURRENT
             )
-            compactActions.add(actionIndex++)
         }
-
-        if (player.hasNextMediaItem()) {
-            builder.addAction(
-                androidx.media3.session.R.drawable.media3_icon_next,
-                getString(R.string.play_next),
-                getNextIntent()
-            )
-            compactActions.add(actionIndex++)
-        }
-
-        builder.setStyle(
-            MediaStyle(mediaSession).setShowActionsInCompactView(*compactActions.toIntArray())
-        )
-
-        return builder.build()
     }
 
-    private fun ensureNotificationChannel() {
+    private fun createNotificationChannel() {
         val notificationManager =
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        // Check if channel exists
         if (notificationManager.getNotificationChannel(CHANNEL_ID) == null) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
@@ -264,228 +148,9 @@ class PlaybackService : MediaSessionService() {
             ).apply {
                 description = getString(R.string.media_notification_channel_description)
                 setShowBadge(false)
+                setSound(null, null) // Отключаем звуки уведомлений
             }
             notificationManager.createNotificationChannel(channel)
-        }
-    }
-
-    private fun getContentIntent(): PendingIntent {
-        return TaskStackBuilder.create(this).run {
-            addNextIntent(Intent(this@PlaybackService, MainActivity::class.java))
-            getPendingIntent(0, immutableFlag or FLAG_UPDATE_CURRENT)
-        }
-    }
-
-    private fun getPlayIntent(): PendingIntent {
-        return PendingIntent.getService(
-            this, 1, Intent(this, PlaybackService::class.java).apply {
-                action = ACTION_PLAY
-                // Add a timestamp to ensure it's treated as a new intent
-                putExtra("timestamp", System.currentTimeMillis())
-            }, immutableFlag or FLAG_UPDATE_CURRENT
-        )
-    }
-
-    private fun getPauseIntent(): PendingIntent {
-        return PendingIntent.getService(
-            this, 2, Intent(this, PlaybackService::class.java).apply {
-                action = ACTION_PAUSE
-                putExtra("timestamp", System.currentTimeMillis())
-            }, immutableFlag or FLAG_UPDATE_CURRENT
-        )
-    }
-
-    private fun getNextIntent(): PendingIntent {
-        return PendingIntent.getService(
-            this, 3, Intent(this, PlaybackService::class.java).apply {
-                action = ACTION_NEXT
-                putExtra("timestamp", System.currentTimeMillis())
-            }, immutableFlag or FLAG_UPDATE_CURRENT
-        )
-    }
-
-    private fun getPreviousIntent(): PendingIntent {
-        return PendingIntent.getService(
-            this, 4, Intent(this, PlaybackService::class.java).apply {
-                action = ACTION_PREVIOUS
-                putExtra("timestamp", System.currentTimeMillis())
-            }, immutableFlag or FLAG_UPDATE_CURRENT
-        )
-    }
-
-    private fun getStopIntent(): PendingIntent {
-        return PendingIntent.getService(
-            this, 5, Intent(this, PlaybackService::class.java).apply {
-                action = ACTION_STOP
-            }, immutableFlag or FLAG_UPDATE_CURRENT
-        )
-    }
-
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent != null) {
-            val action = intent.action
-            if (action != null) {
-                // Use a coroutine to handle actions, allowing debouncing
-                coroutineScope.launch {
-                    handleActionIntent(action)
-                }
-            }
-        }
-        return super.onStartCommand(intent, flags, startId)
-    }
-
-    private suspend fun handleActionIntent(action: String) {
-        // Debounce rapid actions of the same type
-        val currentTime = System.currentTimeMillis()
-        val lastTime = lastActionTimes[action] ?: 0L
-
-        if (currentTime - lastTime < ACTION_DEBOUNCE_TIME) {
-            Timber.d("Debouncing rapid action: $action")
-            return
-        }
-
-        lastActionTimes[action] = currentTime
-
-        when (action) {
-            ACTION_PLAY -> {
-                Timber.d("Handling ACTION_PLAY")
-                playerController.onPlayPauseClick()
-            }
-
-            ACTION_PAUSE -> {
-                Timber.d("Handling ACTION_PAUSE")
-                playerController.onPlayPauseClick()
-            }
-
-            ACTION_NEXT -> {
-                Timber.d("Handling ACTION_NEXT")
-                playerController.onNextClick()
-            }
-
-            ACTION_PREVIOUS -> {
-                Timber.d("Handling ACTION_PREVIOUS")
-                playerController.onPreviousClick()
-            }
-
-            ACTION_STOP -> {
-                Timber.d("Handling ACTION_STOP")
-                stopSelf()
-            }
-        }
-    }
-
-    private suspend fun loadArtworkWithFallback(uri: android.net.Uri): Bitmap? {
-        return withContext(Dispatchers.IO) {
-            try {
-                when {
-                    // Content URI
-                    uri.scheme == "content" -> {
-                        contentResolver.openInputStream(uri)?.use { inputStream ->
-                            BitmapFactory.decodeStream(inputStream)
-                        }
-                    }
-                    // File URI
-                    uri.scheme == "file" -> {
-                        BitmapFactory.decodeFile(uri.path)
-                    }
-                    // Network URI (http, https)
-                    uri.scheme == "http" || uri.scheme == "https" -> {
-                        try {
-                            val url = URL(uri.toString())
-                            val connection = url.openConnection()
-                            connection.connectTimeout = 5000
-                            connection.readTimeout = 5000
-                            connection.inputStream.use { inputStream ->
-                                BitmapFactory.decodeStream(inputStream)
-                            }
-                        } catch (e: IOException) {
-                            Timber.e(e, "Failed to load network image")
-                            null
-                        }
-                    }
-                    // Resource URI
-                    uri.scheme == "android.resource" -> {
-                        val resId = uri.pathSegments.lastOrNull()?.toIntOrNull()
-                        if (resId != null) {
-                            BitmapFactory.decodeResource(resources, resId)
-                        } else {
-                            null
-                        }
-                    }
-
-                    else -> null
-                }
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to load bitmap from uri: $uri")
-                null
-            }
-        }
-    }
-
-    private fun setupMediaItemListener() {
-        player.addListener(object : Player.Listener {
-            override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-                super.onMediaItemTransition(mediaItem, reason)
-
-                // Preload artwork for the new media item
-                mediaItem?.mediaMetadata?.artworkUri?.let { uri ->
-                    if (uri != currentArtworkUri) {
-                        coroutineScope.launch {
-                            currentArtwork = loadArtworkWithFallback(uri)
-                            currentArtworkUri = uri
-                            updateNotification()
-                        }
-                    }
-                }
-            }
-        })
-    }
-
-    override fun onGetSession(controllerInfo: ControllerInfo): MediaSession {
-        return mediaSession
-    }
-
-    override fun onTaskRemoved(rootIntent: Intent?) {
-        if (!player.playWhenReady || player.mediaItemCount == 0) {
-            stopSelf()
-        }
-    }
-
-    override fun onDestroy() {
-        Timber.d("PlaybackService onDestroy")
-
-        // Release resources in correct order
-        mediaSession.release()
-        player.release()
-        coroutineScope.cancel()
-        clearListener()
-
-        // Remove notification when service is destroyed
-        val notificationManager =
-            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.cancel(NOTIFICATION_ID)
-
-        super.onDestroy()
-    }
-
-    private inner class MediaSessionServiceListener : Listener {
-        @SuppressLint("MissingPermission")
-        override fun onForegroundServiceStartNotAllowedException() {
-            Timber.w("Foreground service start not allowed exception")
-            val notificationManagerCompat = NotificationManagerCompat.from(this@PlaybackService)
-            ensureNotificationChannel()
-
-            val pendingIntent = TaskStackBuilder.create(this@PlaybackService).run {
-                addNextIntent(Intent(this@PlaybackService, MainActivity::class.java))
-                getPendingIntent(0, immutableFlag or FLAG_UPDATE_CURRENT)
-            }
-
-            val builder = NotificationCompat.Builder(this@PlaybackService, CHANNEL_ID)
-                .setContentIntent(pendingIntent).setSmallIcon(R.drawable.play)
-                .setContentTitle(getString(R.string.notification_content_title))
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT).setAutoCancel(true)
-
-            notificationManagerCompat.notify(NOTIFICATION_ID, builder.build())
         }
     }
 }
@@ -656,3 +321,5 @@ class MediaLibrarySessionCallback(
         private const val CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_OFF = "com.mono.music.SHUFFLE_OFF"
     }
 }
+
+

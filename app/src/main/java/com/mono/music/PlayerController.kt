@@ -2,19 +2,20 @@ package com.mono.music
 
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.util.Log
 import androidx.annotation.OptIn
-import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.media3.common.Player.REPEAT_MODE_ALL
 import androidx.media3.common.util.UnstableApi
+import com.google.gson.Gson
 import com.mono.music.domain.models.Song
 import com.mono.music.domain.repository.SongRepository
 import com.mono.music.player.MyPlayer
@@ -22,6 +23,7 @@ import com.mono.music.player.PlaybackService
 import com.mono.music.player.PlaybackState
 import com.mono.music.player.PlayerEvents
 import com.mono.music.player.PlayerStates
+import com.mono.music.presentation.player.MediaStateManager
 import com.mono.music.ui.utils.collectPlayerState
 import com.mono.music.ui.utils.launchPlaybackStateJob
 import com.mono.music.ui.utils.resetTracks
@@ -30,11 +32,20 @@ import com.mono.music.ui.utils.toMediaItemList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
+import androidx.core.content.edit
+import com.google.common.reflect.TypeToken
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 
 // Data class to track listening progress
 data class ListeningProgress(
@@ -51,7 +62,16 @@ class PlayerController @Inject constructor(
     private val songRepository: SongRepository,
 ) : PlayerEvents {
 
+    companion object {
+        private const val PREFS_NAME = "player_state"
+        private const val KEY_SELECTED_TRACK = "selected_track__"
+    }
+
+    // Вместо собственного состояния используем потоки из MediaStateManager
+    val playerState = myPlayer.playerState
+
     private val _tracks = mutableStateListOf<Song>()
+    val tracks: List<Song> get() = _tracks
 
     private val navigationLock = Any()
     private var isNavigating = false
@@ -59,14 +79,15 @@ class PlayerController @Inject constructor(
     private val TRANSITION_DEBOUNCE_TIME = 300L // milliseconds
     private var isProcessingStateUpdate = false
 
-    val tracks: List<Song> get() = _tracks
 
     private var isTrackPlay: Boolean = false
+
+//    var selectedTrack: Song? by mutableStateOf(null)
 
     var selectedTrack: Song? by mutableStateOf(null)
         private set
 
-    var selectedTrackIndex: Int by mutableStateOf(-1)
+    var selectedTrackIndex: Int by mutableIntStateOf(-1)
 
     private var playbackStateJob: Job? = null
 
@@ -74,7 +95,6 @@ class PlayerController @Inject constructor(
 
     val playbackState: StateFlow<PlaybackState> get() = _playbackState
 
-    val playerState = myPlayer.playerState
     val hasPrev = myPlayer.hasPrev
     val hasNext = myPlayer.hasNext
 
@@ -86,9 +106,65 @@ class PlayerController @Inject constructor(
     // Threshold for "under 30%" listening
     private val LISTENING_THRESHOLD = 0.3f // 30%
 
+    private var saveTrackJob: Job? = null
+
+
+    init {
+        myPlayer.setOnMediaItemTransitionCallback { newIndex ->
+            handleMediaItemTransitionFromPlayer(newIndex)
+        }
+
+
+    }
+
+
+
+
+    private fun handleMediaItemTransitionFromPlayer(newIndex: Int) {
+        synchronized(navigationLock) {
+            if (isNavigating || isProcessingStateUpdate) {
+                Timber.d("Already processing, skipping external transition")
+                return
+            }
+
+            isProcessingStateUpdate = true
+            try {
+                val previousSongId = selectedTrack?.songId
+                handleSongTransition(previousSongId)
+
+                if (newIndex >= 0 && newIndex < _tracks.size) {
+                    if (selectedTrackIndex >= 0 && selectedTrackIndex < _tracks.size) {
+                        _tracks[selectedTrackIndex].isSelected = false
+                        _tracks[selectedTrackIndex].state = PlayerStates.STATE_IDLE
+                    }
+
+                    selectedTrackIndex = newIndex
+                    selectedTrack = tracks[selectedTrackIndex]
+
+
+                    _tracks.resetTracks()
+                    _tracks[selectedTrackIndex].isSelected = true
+                    _tracks[selectedTrackIndex].state = PlayerStates.STATE_PLAYING
+
+                    currentListeningProgress = ListeningProgress(
+                        songId = selectedTrack!!.songId,
+                        startTime = System.currentTimeMillis(),
+                        maxProgress = 0f,
+                        hasTriggeredAPI = false
+                    )
+
+                    isAuto = true
+
+                    Timber.d("Updated UI for track transition to index: $newIndex, track: ${selectedTrack?.name}")
+                }
+            } finally {
+                isProcessingStateUpdate = false
+            }
+        }
+    }
+
     fun init(track: Song, songs: List<Song>) {
         observePlayerState()
-
         synchronized(navigationLock) {
             if (isNavigating) {
                 Timber.d("Already handling navigation, skipping init")
@@ -143,10 +219,7 @@ class PlayerController @Inject constructor(
 
     private fun startPlaybackService(context: Context) {
         val intent = Intent(context, PlaybackService::class.java)
-
-        // For Android 12 (API 31) and above
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            // Import android.content.pm.ServiceInfo for this constant
             intent.putExtra(
                 "FOREGROUND_SERVICE_TYPE",
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
@@ -163,7 +236,16 @@ class PlayerController @Inject constructor(
     fun onMove(from: Int, to: Int) {
         val song = tracks[from]
         _tracks.swap(from, to)
+
+        when {
+            selectedTrackIndex == from -> selectedTrackIndex = to
+            selectedTrackIndex in (minOf(from, to)..maxOf(from, to)) -> {
+                selectedTrackIndex = if (from < to) selectedTrackIndex - 1 else selectedTrackIndex + 1
+            }
+        }
         myPlayer.reOrder(from, to, song.toMediaItem())
+
+
     }
 
     fun setRepeatMode(mode: Int) {
@@ -184,10 +266,6 @@ class PlayerController @Inject constructor(
 
     fun playerCurrentTime(): Long {
         return myPlayer.currentPlaybackPosition
-    }
-
-    fun playerBufferedTime(): Long {
-        return myPlayer.currentBufferedPosition
     }
 
     fun playerTrackDuration(): Long {
@@ -235,7 +313,7 @@ class PlayerController @Inject constructor(
 
                 currentListeningProgress = progress.copy(hasTriggeredAPI = true)
             } else if (progress != null && progress.songId == songId) {
-                Log.d(
+                Timber.d(
                     "SONG_TRACKER",
                     "✅ Song $songId listened adequately: ${(progress.maxProgress * 100).toInt()}%"
                 )
@@ -249,7 +327,6 @@ class PlayerController @Inject constructor(
 
         if (selectedTrackIndex == -1) isTrackPlay = true
 
-        // Reset tracks and update the selection
         _tracks.resetTracks()
         selectedTrackIndex = index
         selectedTrack = tracks[selectedTrackIndex]
@@ -267,7 +344,6 @@ class PlayerController @Inject constructor(
         startPlaybackService(context)
 
         setUpTrack()
-
         myPlayer.play()
     }
 
@@ -284,8 +360,6 @@ class PlayerController @Inject constructor(
 
         isProcessingStateUpdate = true
         try {
-            Log.e("TAG", "updateState: " + state)
-
             if (selectedTrackIndex != -1 && selectedTrackIndex < _tracks.size) {
                 isTrackPlay = state == PlayerStates.STATE_PLAYING
                 _tracks[selectedTrackIndex].state = state
@@ -306,6 +380,8 @@ class PlayerController @Inject constructor(
                 if (state == PlayerStates.STATE_END && myPlayer.getRepeatMode() == REPEAT_MODE_ALL) {
                      onTrackSelected(0)
                 }
+               if (state== PlayerStates.STATE_PLAYING || state== PlayerStates.STATE_PAUSE)  {
+                }
             }
         } finally {
             isProcessingStateUpdate = false
@@ -321,7 +397,6 @@ class PlayerController @Inject constructor(
         playbackStateJob = CoroutineScope(Dispatchers.Main).launch {
             launchPlaybackStateJob(_playbackState, state, myPlayer)
 
-            // Check progress during playback
             if (state == PlayerStates.STATE_PLAYING) {
                 checkListeningProgress()
             }
@@ -338,18 +413,14 @@ class PlayerController @Inject constructor(
             isNavigating = true
             try {
                 if (myPlayer.getPlayer().hasPreviousMediaItem()) {
-                    // First check if we're at the beginning of the track
                     if (myPlayer.currentPlaybackPosition > 3000) {
-                        // If we're more than 3 seconds into the track, go to the beginning
                         myPlayer.getPlayer().seekTo(0)
                     } else {
-                        // Otherwise go to previous track
                         myPlayer.getPlayer().seekToPrevious()
                         selectedTrackIndex = myPlayer.getPlayer().currentMediaItemIndex
                         onTrackSelected(selectedTrackIndex)
                     }
                 } else {
-                    // Just seek to beginning if no previous track
                     myPlayer.getPlayer().seekTo(0)
                 }
             } finally {
@@ -402,8 +473,8 @@ class PlayerController @Inject constructor(
 
     override fun onSeekBarPositionChanged(position: Long) {
         CoroutineScope(Dispatchers.Main).launch {
-//            Log.e("PLAYER", "onSeekBarPositionChanged: $position" )
             myPlayer.seekToPosition(position)
+
         }
     }
 
@@ -411,10 +482,8 @@ class PlayerController @Inject constructor(
         val currentPlayerIndex = myPlayer.getPlayer().currentMediaItemIndex
         val currentMediaItem = myPlayer.getPlayer().currentMediaItem
 
-        // Handle the previous song before transitioning
         val previousSongId = selectedTrack?.songId
 
-        // Debounce rapid transitions
         val currentTime = System.currentTimeMillis()
 
         if (currentTime - lastTransitionTime < TRANSITION_DEBOUNCE_TIME) {
@@ -429,41 +498,31 @@ class PlayerController @Inject constructor(
         val currentSong = tracks.find { it.songId.toString() == currentMediaItem.mediaId }
         if (currentSong != null && currentPlayerIndex != selectedTrackIndex) {
             handleSongTransition(previousSongId)
+            if (!isProcessingStateUpdate) {
+                synchronized(navigationLock) {
+                    if (selectedTrackIndex != -1 && selectedTrackIndex < _tracks.size) {
+                        _tracks.resetTracks()
+                    }
 
-            if (selectedTrackIndex != -1 && selectedTrackIndex < _tracks.size) {
-                _tracks.resetTracks()
+                    selectedTrackIndex = currentPlayerIndex
+                    selectedTrack = currentSong
+
+                    if (selectedTrackIndex < _tracks.size) {
+                        _tracks[selectedTrackIndex].isSelected = true
+                    }
+
+                    currentListeningProgress = ListeningProgress(
+                        songId = currentSong.songId,
+                        startTime = System.currentTimeMillis(),
+                        maxProgress = 0f,
+                        hasTriggeredAPI = false
+                    )
+
+                    isAuto = true
+                }
             }
-
-            selectedTrackIndex = currentPlayerIndex
-            selectedTrack = currentSong
-
-            if (selectedTrackIndex < _tracks.size) {
-                _tracks[selectedTrackIndex].isSelected = true
-            }
-
-            currentListeningProgress = ListeningProgress(
-                songId = currentSong.songId,
-                startTime = System.currentTimeMillis(),
-                maxProgress = 0f,
-                hasTriggeredAPI = false
-            )
-
-            isAuto = true
         }
     }
 
-    fun onAppPaused() {
-        // When app is paused, check if current song should be reported
-        val currentSongId = selectedTrack?.songId
-        handleSongTransition(currentSongId)
-    }
 
-    fun cleanup() {
-        // Handle current song when cleaning up
-        val currentSongId = selectedTrack?.songId
-        handleSongTransition(currentSongId)
-
-        playbackStateJob?.cancel()
-        currentListeningProgress = null
-    }
 }

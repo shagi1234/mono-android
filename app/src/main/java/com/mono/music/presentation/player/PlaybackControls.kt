@@ -1,6 +1,5 @@
 package com.mono.music.presentation.player
 
-import android.util.Log
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -75,7 +74,6 @@ fun PlaybackControls(
     playerState: PlayerStates,
     isPlaying: Boolean
 ) {
-
     val haptic = LocalHapticFeedback.current
 
 
@@ -97,17 +95,6 @@ fun PlaybackControls(
     var draggingProgress by remember { mutableStateOf<Float?>(null) }
 
     var currentMediaProgress = progressState.currentPlaybackPosition.toFloat()
-
-
-    val realPlayerState = playerController.playerState
-
-    val showLoading = when (playerState) {
-        PlayerStates.STATE_PLAYING,
-        PlayerStates.STATE_PAUSE -> false
-        else -> true // STATE_BUFFERING, STATE_IDLE, STATE_MEDIA_ITEM_TRANSITION
-    }
-
-
 
     LaunchedEffect(currentMediaProgress) {
         if (draggingProgress != null) {
@@ -226,8 +213,7 @@ fun PlaybackControls(
                         playerController.onPlayPauseClick()
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     }
-//                    playerController.onPlayPauseClick()
-//                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+
                 },
                 containerColor = Yellow,
                 contentColor = AlbumCoverBlackBG,
