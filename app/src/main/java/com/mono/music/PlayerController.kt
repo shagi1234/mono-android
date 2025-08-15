@@ -62,12 +62,6 @@ class PlayerController @Inject constructor(
     private val songRepository: SongRepository,
 ) : PlayerEvents {
 
-    companion object {
-        private const val PREFS_NAME = "player_state"
-        private const val KEY_SELECTED_TRACK = "selected_track__"
-    }
-
-    // Вместо собственного состояния используем потоки из MediaStateManager
     val playerState = myPlayer.playerState
 
     private val _tracks = mutableStateListOf<Song>()
@@ -82,7 +76,6 @@ class PlayerController @Inject constructor(
 
     private var isTrackPlay: Boolean = false
 
-//    var selectedTrack: Song? by mutableStateOf(null)
 
     var selectedTrack: Song? by mutableStateOf(null)
         private set
@@ -98,7 +91,7 @@ class PlayerController @Inject constructor(
     val hasPrev = myPlayer.hasPrev
     val hasNext = myPlayer.hasNext
 
-    private var isAuto: Boolean = false
+//    private var isAuto: Boolean = false
 
     private var currentListeningProgress: ListeningProgress? = null
     private val listenedSongs = mutableSetOf<Long>()
@@ -106,18 +99,13 @@ class PlayerController @Inject constructor(
     // Threshold for "under 30%" listening
     private val LISTENING_THRESHOLD = 0.3f // 30%
 
-    private var saveTrackJob: Job? = null
 
 
     init {
         myPlayer.setOnMediaItemTransitionCallback { newIndex ->
             handleMediaItemTransitionFromPlayer(newIndex)
         }
-
-
     }
-
-
 
 
     private fun handleMediaItemTransitionFromPlayer(newIndex: Int) {
@@ -153,7 +141,7 @@ class PlayerController @Inject constructor(
                         hasTriggeredAPI = false
                     )
 
-                    isAuto = true
+//                    isAuto = true
 
                     Timber.d("Updated UI for track transition to index: $newIndex, track: ${selectedTrack?.name}")
                 }
@@ -240,7 +228,8 @@ class PlayerController @Inject constructor(
         when {
             selectedTrackIndex == from -> selectedTrackIndex = to
             selectedTrackIndex in (minOf(from, to)..maxOf(from, to)) -> {
-                selectedTrackIndex = if (from < to) selectedTrackIndex - 1 else selectedTrackIndex + 1
+                selectedTrackIndex =
+                    if (from < to) selectedTrackIndex - 1 else selectedTrackIndex + 1
             }
         }
         myPlayer.reOrder(from, to, song.toMediaItem())
@@ -331,6 +320,7 @@ class PlayerController @Inject constructor(
         selectedTrackIndex = index
         selectedTrack = tracks[selectedTrackIndex]
 
+
         // Initialize tracking for the new song
         selectedTrack?.let { song ->
             currentListeningProgress = ListeningProgress(
@@ -344,12 +334,27 @@ class PlayerController @Inject constructor(
         startPlaybackService(context)
 
         setUpTrack()
+
         myPlayer.play()
+
     }
+//
+//    private fun setUpTrack() {
+//        if (!isAuto) myPlayer.setUpTrack(selectedTrackIndex, isTrackPlay)
+//        isAuto = false
+//    }
 
     private fun setUpTrack() {
-        if (!isAuto) myPlayer.setUpTrack(selectedTrackIndex, isTrackPlay)
-        isAuto = false
+        myPlayer.setUpTrack(selectedTrackIndex, isTrackPlay)
+
+//        Log.e("TRACK_SELECTED", "setUpTrack: isAuto=$isAuto, selectedTrackIndex=$selectedTrackIndex")
+//        if (!isAuto) {
+//            Log.e("TRACK_SELECTED", "Вызываем myPlayer.setUpTrack")
+//            myPlayer.setUpTrack(selectedTrackIndex, isTrackPlay)
+//        } else {
+//            Log.e("TRACK_SELECTED", "Пропускаем myPlayer.setUpTrack из-за isAuto=true")
+//        }
+//        isAuto = false
     }
 
     private fun updateState(state: PlayerStates) {
@@ -378,10 +383,9 @@ class PlayerController @Inject constructor(
                 updatePlaybackState(state)
 
                 if (state == PlayerStates.STATE_END && myPlayer.getRepeatMode() == REPEAT_MODE_ALL) {
-                     onTrackSelected(0)
+                    onTrackSelected(0)
                 }
-               if (state== PlayerStates.STATE_PLAYING || state== PlayerStates.STATE_PAUSE)  {
-                }
+
             }
         } finally {
             isProcessingStateUpdate = false
@@ -518,7 +522,7 @@ class PlayerController @Inject constructor(
                         hasTriggeredAPI = false
                     )
 
-                    isAuto = true
+//                    isAuto = true
                 }
             }
         }

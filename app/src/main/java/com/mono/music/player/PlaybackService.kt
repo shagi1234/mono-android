@@ -38,6 +38,7 @@ import androidx.media3.session.SessionResult
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
+import com.google.common.util.concurrent.SettableFuture
 import com.mono.music.MainActivity
 import com.mono.music.PlayerController
 import com.mono.music.R
@@ -66,21 +67,17 @@ class PlaybackService : MediaSessionService() {
 
     private lateinit var player: ExoPlayer
 
-    private lateinit var mediaSession: MediaSession
+    private  var mediaSession: MediaSession?= null
 
-    private val coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     companion object {
-        private const val NOTIFICATION_ID = 1002
         private const val CHANNEL_ID = "mono_session_notification_channel_id"
     }
 
-    // ========== LIFECYCLE METHODS ==========
 
     override fun onCreate() {
         super.onCreate()
-        Timber.d("PlaybackService onCreate")
-
+        Timber.d("onCreate")
         initializePlayer()
         initializeMediaSession()
         createNotificationChannel()
@@ -89,29 +86,19 @@ class PlaybackService : MediaSessionService() {
 
 
     override fun onDestroy() {
-        Timber.d("PlaybackService onDestroy")
-        // Освобождаем ресурсы в правильном порядке
-        coroutineScope.cancel()
-        mediaSession.release()
-        player.release()
-
+        Timber.d("onDestroy")
+        mediaSession?.run {
+            player.release()
+            release()
+            mediaSession = null
+        }
         super.onDestroy()
     }
 
-    // ========== REQUIRED MediaSessionService METHODS ==========
 
-    override fun onGetSession(controllerInfo: ControllerInfo): MediaSession {
+    override fun onGetSession(controllerInfo: ControllerInfo): MediaSession? {
         return mediaSession
     }
-
-    override fun onTaskRemoved(rootIntent: Intent?) {
-        // Останавливаем сервис если музыка не играет
-        if (!player.playWhenReady || player.mediaItemCount == 0) {
-            stopSelf()
-        }
-    }
-
-    // ========== INITIALIZATION METHODS ==========
 
     private fun initializePlayer() {
         player = playerFactory.createPlayer()
@@ -136,6 +123,13 @@ class PlaybackService : MediaSessionService() {
         }
     }
 
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        // Останавливаем сервис если музыка не играет
+        if (!player.playWhenReady || player.mediaItemCount == 0) {
+            stopSelf()
+        }
+    }
+
     private fun createNotificationChannel() {
         val notificationManager =
             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -148,17 +142,18 @@ class PlaybackService : MediaSessionService() {
             ).apply {
                 description = getString(R.string.media_notification_channel_description)
                 setShowBadge(false)
-                setSound(null, null) // Отключаем звуки уведомлений
+                setSound(null, null)
             }
             notificationManager.createNotificationChannel(channel)
         }
     }
+
 }
 
 /** A [MediaLibraryService.MediaLibrarySession.Callback] implementation. */
 @OptIn(UnstableApi::class)
 class MediaLibrarySessionCallback(
-    private val context: Context, private val playerController: PlayerController
+    private val context: Context, private val playerController: PlayerController,
 ) : MediaLibraryService.MediaLibrarySession.Callback {
 
     private val customLayoutCommandButtons: List<CommandButton> = listOf(
@@ -207,30 +202,12 @@ class MediaLibrarySessionCallback(
         return MediaSession.ConnectionResult.AcceptedResultBuilder(session).build()
     }
 
-    override fun onCustomCommand(
-        session: MediaSession,
-        controller: ControllerInfo,
-        customCommand: SessionCommand,
-        args: Bundle
-    ): ListenableFuture<SessionResult> {
-        when (customCommand.customAction) {
-            CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_ON -> {
-                playerController.toggleShuffle()
-                return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
-            }
 
-            CUSTOM_COMMAND_TOGGLE_SHUFFLE_MODE_OFF -> {
-                playerController.toggleShuffle()
-                return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
-            }
-        }
-        return Futures.immediateFuture(SessionResult(SessionError.ERROR_NOT_SUPPORTED))
-    }
 
     override fun onGetItem(
         session: MediaLibraryService.MediaLibrarySession, browser: ControllerInfo, mediaId: String
     ): ListenableFuture<LibraryResult<MediaItem>> {
-        // Find the media item by ID
+
         val tracks = playerController.tracks
         val song = tracks.find { it.songId.toString() == mediaId }
 
@@ -244,24 +221,6 @@ class MediaLibrarySessionCallback(
         } else {
             Futures.immediateFuture(LibraryResult.ofError(SessionError.ERROR_BAD_VALUE))
         }
-    }
-
-    override fun onGetChildren(
-        session: MediaLibraryService.MediaLibrarySession,
-        browser: ControllerInfo,
-        parentId: String,
-        page: Int,
-        pageSize: Int,
-        params: MediaLibraryService.LibraryParams?
-    ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
-        // Implement if you need a browsable media library
-        return Futures.immediateFuture(LibraryResult.ofError(SessionError.ERROR_BAD_VALUE))
-    }
-
-    override fun onAddMediaItems(
-        mediaSession: MediaSession, controller: ControllerInfo, mediaItems: List<MediaItem>
-    ): ListenableFuture<List<MediaItem>> {
-        return Futures.immediateFuture(resolveMediaItems(mediaItems))
     }
 
     override fun onSetMediaItems(

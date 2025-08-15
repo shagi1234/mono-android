@@ -2,6 +2,8 @@ package com.mono.music.player
 
 import android.content.Context
 import androidx.annotation.OptIn
+import androidx.media3.common.AudioAttributes
+import androidx.media3.common.C
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.exoplayer.ExoPlayer
@@ -29,7 +31,15 @@ class ExoPlayerFactoryImpl @OptIn(UnstableApi::class)
     override fun createPlayer(): ExoPlayer {
         val hlsMediaSource = HlsMediaSource.Factory(httpDataSourceFactory)
         return ExoPlayer.Builder(context)
+            .setHandleAudioBecomingNoisy(true)
             .setMediaSourceFactory(hlsMediaSource)
+            .setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(C.USAGE_MEDIA)
+                    .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
+                    .build(),
+                true
+            )
             .build()
     }
 }
