@@ -265,7 +265,7 @@ class MyPlayer @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            Timber.e(TAG, "Audio focus request failed", e)
+            Timber.e("Audio focus request failed", e)
         }
     }
 

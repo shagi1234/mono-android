@@ -267,7 +267,7 @@ class PlayerController @Inject constructor(
             try {
                 songRepository.listenedSong(songId)
             } catch (e: Exception) {
-                Log.e("SONG_TRACKER", "❌ Error reporting under-listened song: $songId", e)
+                Timber.e("SONG_TRACKER", "❌ Error reporting under-listened song: $songId", e)
             }
         }
     }
