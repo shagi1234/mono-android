@@ -61,8 +61,6 @@ fun TrackBottomSheet(
     onDelete: () -> Unit = {},
     onDismiss: () -> Unit
 ) {
-
-
     ModalBottomSheet(
         modifier = Modifier,
         containerColor = AlbumCoverBlackBG,

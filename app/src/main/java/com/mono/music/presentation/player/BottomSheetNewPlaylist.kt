@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mono.music.R
 import com.mono.music.domain.models.Playlist
+import com.mono.music.ui.components.CustomButton
 import com.mono.music.ui.theme.AlbumCoverBlackBG
 import com.mono.music.ui.theme.Black
 import com.mono.music.ui.theme.SFFontFamily
@@ -50,7 +51,7 @@ fun NewPlaylistDialog(
     onEdit: (Playlist) -> Unit = {},
     onAdd: (String) -> Unit,
 
-) {
+    ) {
 
     var playlistName by remember { mutableStateOf(playlist?.name ?: "") }
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -132,37 +133,57 @@ fun NewPlaylistDialog(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        Button(
-            modifier = Modifier.fillMaxWidth(),
-            onClick = {
-                if (playlist == null){
-                    onAdd(playlistName)
-                }else{
-                    onEdit(playlist.copy(name = playlistName))
-                }
-            },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                disabledContainerColor = Yellow.copy(alpha = 0.5f),
-                contentColor = MaterialTheme.colorScheme.background
-            ),
+
+        CustomButton(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 14.dp, horizontal = 40.dp),
+            text = R.string.save,
             enabled = playlistName.isNotEmpty(),
             shape = MaterialTheme.shapes.small,
-            contentPadding = PaddingValues(vertical = 14.dp, horizontal = 40.dp)
+
         ) {
-            Text(
-                text = stringResource(id = R.string.save),
-                style = TextStyle(
-                    fontSize = 16.sp,
-                    lineHeight = 16.sp,
-                    fontFamily = SFFontFamily,
-                    fontWeight = FontWeight(700),
-                    color = MaterialTheme.colorScheme.background,
-                )
-
-            )
-
+            if (playlist == null) {
+                onAdd(playlistName)
+            } else {
+                onEdit(playlist.copy(name = playlistName))
+            }
         }
+//
+//        Button(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .padding(vertical = 14.dp, horizontal = 40.dp),
+//
+//            onClick = {
+//                if (playlist == null) {
+//                    onAdd(playlistName)
+//                } else {
+//                    onEdit(playlist.copy(name = playlistName))
+//                }
+//            },
+//            colors = ButtonDefaults.buttonColors(
+//                containerColor = MaterialTheme.colorScheme.primary,
+//                disabledContainerColor = Yellow.copy(alpha = 0.5f),
+//                contentColor = MaterialTheme.colorScheme.background
+//            ),
+//            enabled = playlistName.isNotEmpty(),
+//            shape = MaterialTheme.shapes.small,
+//            contentPadding = PaddingValues(vertical = 14.dp, horizontal = 40.dp)
+//        ) {
+//            Text(
+//                text = stringResource(id = R.string.save),
+//                style = TextStyle(
+//                    fontSize = 16.sp,
+//                    lineHeight = 16.sp,
+//                    fontFamily = SFFontFamily,
+//                    fontWeight = FontWeight(700),
+//                    color = MaterialTheme.colorScheme.background,
+//                )
+//
+//            )
+//
+//        }
     }
 
 

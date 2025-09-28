@@ -6,33 +6,44 @@ import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
-import androidx.annotation.OptIn
+import android.view.MotionEvent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.EaseInCubic
+import androidx.compose.animation.core.EaseOutCubic
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandIn
 import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.unit.Velocity
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.session.legacy.MediaMetadataCompat
 import androidx.navigation.NavBackStackEntry
 import androidx.palette.graphics.Palette
 import coil.ImageLoader
@@ -43,6 +54,7 @@ import com.mono.music.player.MyPlayer
 import com.mono.music.player.PlaybackState
 import com.mono.music.player.PlayerStates
 import com.mono.music.ui.theme.Background
+import com.mono.music.ui.theme.Yellow
 import com.ramcosta.composedestinations.spec.DestinationStyle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -51,9 +63,207 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import java.util.Collections
 import kotlin.math.max
+
+
+const val LIGHT_PRESS = 0.98f
+const val MEDIUM_PRESS = 0.95f
+const val HEAVY_PRESS = 0.9f
+const val ICON_PRESS = 0.8f
+
+//
+//@OptIn(ExperimentalComposeUiApi::class)
+//fun Modifier.scaleIconClickable(
+//    pressValue: Float = ICON_PRESS,
+//    enabled: Boolean = true,
+//    vibrate: Boolean = true,
+//    hapticType: HapticType = HapticType.MEDIUM,
+//    onClick: () -> Unit
+//) =
+//    composed {
+//       val  haptic = rememberHaptic()
+//        val selected = remember { mutableStateOf(false) }
+//        val scale = animateFloatAsState(if (selected.value) pressValue else 1f)
+//
+//        this
+//            .scale(scale.value)
+//            .pointerInteropFilter {
+//                when (it.action) {
+//                    MotionEvent.ACTION_DOWN -> {
+//                        if (enabled) {
+//                            if (vibrate)
+//                                haptic(hapticType)
+//                            selected.value = true
+//                        }
+//                    }
+//                    MotionEvent.ACTION_UP -> {
+//                        if (enabled) {
+//                            selected.value = false
+//                            onClick()
+//                        }
+//                    }
+//                    MotionEvent.ACTION_CANCEL -> {
+//                        if (enabled) {
+//                            selected.value = false
+//                        }
+//                    }
+//                }
+//                true
+//            }
+//
+//    }
+
+@OptIn(ExperimentalComposeUiApi::class)
+fun Modifier.scaleIconClickable(
+    pressValue: Float = ICON_PRESS,
+    enabled: Boolean = true,
+    vibrate: Boolean = true,
+    hapticType: HapticType = HapticType.MEDIUM,
+    onClick: () -> Unit
+) = composed {
+    val haptic = rememberHaptic()
+    val selected = remember { mutableStateOf(false) }
+
+    var pendingAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+
+    val scale by animateFloatAsState(
+        targetValue = if (selected.value) pressValue else 1f,
+        // Настройки анимации как в кнопке
+        animationSpec = if (selected.value) {
+            tween(durationMillis = 100, easing = EaseInCubic)
+        } else {
+            tween(durationMillis = 100, easing = EaseOutCubic)
+        },
+        finishedListener = { finalValue ->
+            // Вызываем onClick когда анимация завершилась и мы вернулись к scale = 1f
+            if (finalValue == 1f && pendingAction != null) {
+                pendingAction?.invoke()
+                pendingAction = null
+            }
+        }
+    )
+
+
+    this
+        .scale(scale)
+        .pointerInteropFilter {
+            when (it.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    if (enabled) {
+                        if (vibrate)
+                            haptic(hapticType)
+                        selected.value = true
+                    }
+                }
+                MotionEvent.ACTION_UP -> {
+                    if (enabled) {
+                        // Сохраняем действие для выполнения после анимации
+                        pendingAction = onClick
+                        selected.value = false
+                    }
+                }
+                MotionEvent.ACTION_CANCEL -> {
+                    if (enabled) {
+                        selected.value = false
+                        // При отмене не выполняем действие
+                        pendingAction = null
+                    }
+                }
+            }
+            true
+        }
+}
+@Composable
+fun Modifier.scaleItemClickable(
+    hapticType: HapticType = HapticType.MEDIUM,
+    enabled: Boolean = true,
+    scaleDown: Float = MEDIUM_PRESS,
+    onClick: () -> Unit,
+): Modifier {
+    val isPressed = remember { mutableStateOf(false) }
+    val haptic = rememberHaptic()
+
+    val scale = animateFloatAsState(
+        targetValue = if (isPressed.value && enabled) scaleDown else 1f,
+        label = "scale"
+    )
+
+    return this
+        .scale(scale.value)
+        .pointerInput(enabled) {
+            detectTapGestures(
+                onPress = {
+                    if (enabled) {
+                        isPressed.value = true
+//                        haptic(hapticType)
+                        tryAwaitRelease()
+                        isPressed.value = false
+                    }
+                },
+                onTap = {
+                    haptic(hapticType)
+
+                    if (enabled) onClick()
+                }
+            )
+        }
+}
+
+@Composable
+fun Modifier.scaleButtonClickable(
+    containerColor: Color = Yellow,
+    enabled: Boolean = true,
+    hapticType: HapticType = HapticType.MEDIUM,
+    scaleDown: Float = MEDIUM_PRESS,
+    darkenFactor: Float = 0.9f,
+    onClick: () -> Unit,
+): Modifier {
+    val isPressed = remember { mutableStateOf(false) }
+    val haptic = rememberHaptic()
+
+    // Анимация масштаба
+    val scale = animateFloatAsState(
+        targetValue = if (isPressed.value && enabled) scaleDown else 1f,
+        label = "scale"
+    )
+
+    // Анимация цвета контейнера
+    val animatedContainerColor = animateColorAsState(
+        targetValue = when {
+            isPressed.value && enabled -> {
+                val hsv = FloatArray(3)
+                android.graphics.Color.colorToHSV(containerColor.toArgb(), hsv)
+                hsv[2] = hsv[2] * darkenFactor
+                Color(android.graphics.Color.HSVToColor(hsv))
+            }
+            !enabled -> containerColor.copy(alpha = 0.6f)
+            else -> containerColor
+        },
+        label = "container_color"
+    )
+
+    return this
+        .scale(scale.value)
+        .background(animatedContainerColor.value, shape = MaterialTheme.shapes.medium)
+        .pointerInput(enabled) {
+            detectTapGestures(
+                onPress = {
+                    if (enabled) {
+                        isPressed.value = true
+                        haptic(hapticType)
+                        tryAwaitRelease()
+                        isPressed.value = false
+                    }
+                },
+                onTap = {
+                    if (enabled) onClick()
+                }
+            )
+        }
+}
+
+
 
 
 fun MutableList<Song>.resetTracks() {

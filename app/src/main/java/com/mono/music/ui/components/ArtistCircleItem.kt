@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.mono.music.domain.models.Artist
 import com.mono.music.ui.theme.WhiteTextColor
+import com.mono.music.ui.utils.scaleItemClickable
 
 @Composable
 fun ArtistCircleItem(
@@ -36,7 +37,7 @@ fun ArtistCircleItem(
     Column(
         modifier = modifier
             .padding(horizontal = 8.dp)
-            .clickable { onArtistClick(artist) },
+            .scaleItemClickable { onArtistClick(artist) },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Image(

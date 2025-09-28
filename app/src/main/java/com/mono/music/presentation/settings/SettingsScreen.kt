@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -79,6 +80,7 @@ import com.mono.music.presentation.settings.components.ContactUsView
 import com.mono.music.presentation.settings.components.PromoCodeDialog
 import com.mono.music.presentation.settings.components.SettingsElements
 import com.mono.music.presentation.settings.components.SettingsTopAppBar
+import com.mono.music.ui.components.CustomButton
 import com.mono.music.ui.components.LanguageSelectionView
 import com.mono.music.ui.theme.DarkGray
 import com.mono.music.ui.theme.SFFontFamily
@@ -87,6 +89,9 @@ import com.mono.music.ui.theme.WhiteTextColor
 import com.mono.music.ui.theme.Yellow
 import com.mono.music.ui.utils.LocaleHelper
 import com.mono.music.ui.utils.ScreenTransition
+import com.mono.music.ui.utils.scaleButtonClickable
+import com.mono.music.ui.utils.scaleIconClickable
+import com.mono.music.ui.utils.scaleItemClickable
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.launch
@@ -108,7 +113,6 @@ fun SettingsScreen(
 
     val currentLanguage by settingsViewModel.currentLanguage.collectAsState()
 
-    val options by settingsViewModel.options.collectAsState()
     val paymentMethods by settingsViewModel.paymentMethods.collectAsState()
     val name by settingsViewModel.name.collectAsState("")
     val validUntil by settingsViewModel.validUntil.collectAsState("")
@@ -205,8 +209,7 @@ fun SettingsScreen(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
                 .padding(top = 20.dp, start = 20.dp, end = 20.dp, bottom = 100.dp)
-                .imePadding()
-                ,
+                .imePadding(),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
 
@@ -270,19 +273,21 @@ fun SettingsScreen(
             }
 
 
-            Row(modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 32.dp)
-                .clip(MaterialTheme.shapes.medium)
-                .background(MaterialTheme.colorScheme.primary)
-                .padding(12.dp, 20.dp)
-                .clickable {
-                    navigator.navigate(TariffsScreenDestination)
-                },
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 32.dp)
+                    .clip(MaterialTheme.shapes.medium)
+                    .scaleButtonClickable {
+                        (navigator.navigate(
+                            TariffsScreenDestination
+                        ))
+                    }
+                    .padding(12.dp, 20.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(
-                   modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f)
                 ) {
                     Text(
                         text = stringResource(id = R.string.tariffs),
@@ -368,12 +373,16 @@ fun SettingsScreen(
                     },
                     trailingIcon = {
                         Button(
-                            modifier = Modifier.padding(12.dp),
+                            modifier = Modifier
+                                .padding(12.dp)
+                                .scaleIconClickable(enabled = code.isNotEmpty()) {
+                                    settingsViewModel.checkPromoCode(code)
+                                    code = ""
+                                    focusManager.clearFocus()
+                                    keyboardController?.hide()
+                                },
                             onClick = {
-                                settingsViewModel.checkPromoCode(code)
-                                code = ""
-                                focusManager.clearFocus()
-                                keyboardController?.hide()
+
                             },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
@@ -431,9 +440,10 @@ fun SettingsScreen(
 
 
             Column {
-                Row(modifier = Modifier
-                    .clickable { settingsViewModel.logout(); playListViewModel.clearAllDownloadedSongs() }
-                    .padding(top = 32.dp),
+                Row(
+                    modifier = Modifier
+                        .scaleItemClickable { settingsViewModel.logout(); playListViewModel.clearAllDownloadedSongs() }.fillMaxWidth()
+                        .padding(top = 32.dp),
                     horizontalArrangement = Arrangement.Start,
                     verticalAlignment = Alignment.CenterVertically) {
                     Icon(

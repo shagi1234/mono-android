@@ -30,6 +30,7 @@ import com.mono.music.ui.theme.DarkGray
 import com.mono.music.ui.theme.GrayTextColor
 import com.mono.music.ui.theme.SFFontFamily
 import com.mono.music.ui.theme.WhiteTextColor
+import com.mono.music.ui.utils.scaleItemClickable
 
 @Composable
 fun PlaylistView(
@@ -43,9 +44,9 @@ fun PlaylistView(
 
     Column(
         modifier = Modifier
-            .clip(shape = MaterialTheme.shapes.medium)
             .width(170.dp)
-            .clickable { onClick() }
+            .scaleItemClickable { onClick() }
+            .clip(shape = MaterialTheme.shapes.medium)
             .background(AlbumCoverBlackBG)
     ) {
 

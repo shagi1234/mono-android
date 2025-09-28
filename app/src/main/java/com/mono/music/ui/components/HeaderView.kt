@@ -18,6 +18,7 @@ import com.mono.music.R
 import com.mono.music.ui.theme.SFFontFamily
 import com.mono.music.ui.theme.WhiteTextColor
 import com.mono.music.ui.utils.clickWithoutIndication
+import com.mono.music.ui.utils.scaleItemClickable
 
 
 @Composable
@@ -29,7 +30,7 @@ fun HeaderView(
     onClick: () -> Unit
 ) {
     Row(modifier = modifier
-        .clickWithoutIndication { onClick() }
+        .scaleItemClickable { onClick() }
         .padding(horizontal = 20.dp),
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically) {

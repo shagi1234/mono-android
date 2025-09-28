@@ -30,6 +30,7 @@ import com.mono.music.ui.theme.DarkGray
 import com.mono.music.ui.theme.GrayTextColor
 import com.mono.music.ui.theme.SFFontFamily
 import com.mono.music.ui.theme.WhiteTextColor
+import com.mono.music.ui.utils.scaleItemClickable
 
 
 @Composable
@@ -47,11 +48,11 @@ fun LatestReleaseView(
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 20.dp, end = 20.dp, top = 20.dp)
-            .clip(shape = MaterialTheme.shapes.large)
-            .clickable {
+            .scaleItemClickable {
                 if (latestRelease.isAlbum()) navigateToAlbum(latestRelease.album!!)
                 else if (latestRelease.isSong()) playSong(latestRelease.song!!)
             }
+            .clip(shape = MaterialTheme.shapes.large)
             .background(color = DarkGray)
             .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically,

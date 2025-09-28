@@ -24,6 +24,7 @@ import com.mono.music.domain.models.Playlist
 import com.mono.music.ui.theme.SFFontFamily
 import com.mono.music.ui.theme.SurfaceSecond
 import com.mono.music.ui.theme.WhiteTextColor
+import com.mono.music.ui.utils.scaleItemClickable
 
 
 @Composable
@@ -35,7 +36,7 @@ fun ActionsModelView(
     onClick: () -> Unit
 ) {
     Row(modifier = Modifier
-        .clickable { onClick() }
+        .scaleItemClickable { onClick() }
         .padding(20.dp, 16.dp),
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically) {
@@ -76,7 +77,7 @@ fun LocalPlaylistSelectionView(
     onClick: () -> Unit
 ) {
     Row(modifier = Modifier
-        .clickable { onClick() }
+        .scaleItemClickable { onClick() }
         .background(SurfaceSecond)
         .padding(15.dp, 13.dp),
         horizontalArrangement = Arrangement.spacedBy(15.dp),

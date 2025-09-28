@@ -3,7 +3,10 @@
 package com.mono.music.presentation.login
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.ScrollableDefaults
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -47,6 +50,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
@@ -73,6 +77,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mono.music.R
 import com.mono.music.navigation.screen.LoginNavGraph
+import com.mono.music.presentation.destinations.LoginScreenDestination
 import com.mono.music.presentation.destinations.OTPScreenDestination
 import com.mono.music.presentation.onboarding.OnBoardingScreen
 import com.mono.music.ui.components.CollapsingSmallTopAppBar
@@ -114,6 +119,8 @@ fun LoginScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val snackbarMessage = stringResource(id = R.string.error)
+
+    val scrollState = rememberScrollState()
 
     LaunchedEffect(uiState.failure) {
         if (uiState.failure) {
@@ -169,7 +176,7 @@ fun LoginScreen(
             modifier = Modifier
                 .safeDrawingPadding()
                 .padding(all = 20.dp)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(state = scrollState)
         ) {
 
             Image(
@@ -313,8 +320,8 @@ fun LoginScreen(
 
             CustomButton(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 20.dp),
+                    .padding(top = 20.dp)
+                    .fillMaxWidth(),
                 text = R.string.continue_string,
                 onClick = {
                     if (phone.trim().length == 8) {
@@ -328,7 +335,6 @@ fun LoginScreen(
                 containerColor = Yellow,
                 contentColor = AlbumCoverBlackBG,
                 shape = MaterialTheme.shapes.small
-
             )
         }
 

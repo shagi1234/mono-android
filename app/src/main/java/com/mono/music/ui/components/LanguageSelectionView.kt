@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import com.mono.music.R
 import com.mono.music.ui.theme.AlbumCoverBlackBG
 import com.mono.music.ui.theme.SFFontFamily
+import com.mono.music.ui.utils.scaleItemClickable
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -105,7 +106,7 @@ fun LanguageView(
 
     Text(
         modifier = Modifier
-            .clickable { onSelect() }
+            .scaleItemClickable { onSelect() }
             .padding(20.dp)
             .fillMaxWidth(),
         text = lang,

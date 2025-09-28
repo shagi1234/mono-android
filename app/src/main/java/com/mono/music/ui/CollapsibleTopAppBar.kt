@@ -282,7 +282,7 @@ private fun CollapsibleScaffoldInternal(
 fun CollapsibleScaffoldTopBarScope.TopBar(
     modifier: Modifier = Modifier,
     mode: CollapsibleTopAppBarMode = CollapsibleTopAppBarMode.Default,
-    onBack: (() -> Unit)? = null,
+        onBack: (() -> Unit)? = null,
     actions: (@Composable RowScope.() -> Unit)? = null,
     content: (@Composable CollapsibleTopAppBarScope.() -> Unit) = { }
 ) {

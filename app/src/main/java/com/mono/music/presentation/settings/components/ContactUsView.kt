@@ -33,6 +33,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mono.music.R
+import com.mono.music.ui.components.CustomButton
 import com.mono.music.ui.theme.AlbumCoverBlackBG
 import com.mono.music.ui.theme.SFFontFamily
 import com.mono.music.ui.theme.Surface
@@ -123,33 +124,45 @@ fun ContactUsView(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        Button(
-            modifier = Modifier.fillMaxWidth(),
-            onClick = {
-                onDone(text)
-            },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                disabledContainerColor = Yellow.copy(alpha = 0.5f),
-                contentColor = MaterialTheme.colorScheme.background
-            ),
+        CustomButton(
+            modifier = Modifier.padding(vertical = 14.dp, horizontal = 40.dp).fillMaxWidth(),
+            text=  R.string.send,
+            contentColor = MaterialTheme.colorScheme.background,
+            containerColor = MaterialTheme.colorScheme.primary,
             enabled = text.isNotEmpty(),
             shape = MaterialTheme.shapes.small,
-            contentPadding = PaddingValues(vertical = 14.dp, horizontal = 40.dp)
         ) {
-            Text(
-                text = stringResource(id = R.string.send),
-                style = TextStyle(
-                    fontSize = 16.sp,
-                    lineHeight = 16.sp,
-                    fontFamily = SFFontFamily,
-                    fontWeight = FontWeight(700),
-                    color = MaterialTheme.colorScheme.background,
-                )
-
-            )
+            onDone(text)
 
         }
+
+//        Button(
+//            modifier = Modifier.fillMaxWidth(),
+//            onClick = {
+//                onDone(text)
+//            },
+//            colors = ButtonDefaults.buttonColors(
+//                containerColor = MaterialTheme.colorScheme.primary,
+//                disabledContainerColor = Yellow.copy(alpha = 0.5f),
+//                contentColor = MaterialTheme.colorScheme.background
+//            ),
+//            enabled = text.isNotEmpty(),
+//            shape = MaterialTheme.shapes.small,
+//            contentPadding = PaddingValues(vertical = 14.dp, horizontal = 40.dp)
+//        ) {
+//            Text(
+//                text = stringResource(id = R.string.send),
+//                style = TextStyle(
+//                    fontSize = 16.sp,
+//                    lineHeight = 16.sp,
+//                    fontFamily = SFFontFamily,
+//                    fontWeight = FontWeight(700),
+//                    color = MaterialTheme.colorScheme.background,
+//                )
+//
+//            )
+//
+//        }
     }
 
 

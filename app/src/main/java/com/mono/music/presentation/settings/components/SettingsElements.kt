@@ -18,12 +18,13 @@ import com.mono.music.R
 import com.mono.music.ui.theme.SFFontFamily
 import com.mono.music.ui.theme.WhiteTextColor
 import com.mono.music.ui.theme.Yellow
+import com.mono.music.ui.utils.scaleItemClickable
 
 @Composable
 fun SettingsElements(icon: Int, text: String, expandable: Boolean, endText: String? = null, onClick: () -> Unit){
 
     Row(modifier = Modifier
-        .clickable { onClick() }
+        .scaleItemClickable { onClick() }
         .padding(15.dp, 12.dp),
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically) {

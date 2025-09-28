@@ -41,6 +41,8 @@ import com.mono.music.ui.theme.GrayTextColor
 import com.mono.music.ui.theme.SFFontFamily
 import com.mono.music.ui.theme.WhiteTextColor
 import com.mono.music.ui.theme.Yellow
+import com.mono.music.ui.utils.scaleIconClickable
+import com.mono.music.ui.utils.scaleItemClickable
 
 
 @Composable
@@ -65,7 +67,7 @@ fun LocalPlayListView(
     Row(
         modifier = Modifier
             .clip(shape = MaterialTheme.shapes.small)
-            .clickable { selectPlaylist() }
+            .scaleItemClickable { selectPlaylist() }
             .padding(vertical = 5.dp)
             .padding(start = 20.dp, end = 10.dp)
             .fillMaxWidth(),
@@ -137,7 +139,8 @@ fun LocalPlayListView(
         }
         Box {
             IconButton(
-                onClick = { expanded = true },
+                modifier = Modifier.scaleIconClickable { expanded = true },
+                onClick = { },
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.song_setting),
@@ -155,16 +158,15 @@ fun LocalPlayListView(
                     DropdownMenuItem(
                         text = { Text(text = stringResource(R.string.edit)) },
                         onClick = {
-
                             onEdit()
                             expanded = false
                         })
 
                 }
                 DropdownMenuItem(
+
                     text = { Text(text = stringResource(R.string.delete)) },
                     onClick = {
-
                         onDelete()
                         expanded = false
                     })

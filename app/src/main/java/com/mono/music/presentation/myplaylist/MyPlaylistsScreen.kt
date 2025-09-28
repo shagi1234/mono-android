@@ -60,6 +60,9 @@ import com.mono.music.ui.theme.SFFontFamily
 import com.mono.music.ui.theme.Surface
 import com.mono.music.ui.theme.WhiteTextColor
 import com.mono.music.ui.theme.Yellow
+import com.mono.music.ui.utils.HapticType
+import com.mono.music.ui.utils.scaleIconClickable
+import com.mono.music.ui.utils.scaleItemClickable
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.launch
@@ -84,8 +87,6 @@ fun MyPlaylistsScreen(
     val type by myPlaylistsViewModel.type.collectAsState("")
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val snackbarAddMessage = stringResource(id = R.string.successfully_added)
-    val snackbarDeleteMessage = stringResource(id = R.string.successfully_deleted)
     val sections = listOf(
         LibrarySection.All,
         LibrarySection.Playlist,
@@ -121,7 +122,8 @@ fun MyPlaylistsScreen(
                     fontWeight = FontWeight.Bold
                 )
                 IconButton(
-                    onClick = { showNewPlaylistDialog = true },
+                    modifier = Modifier.scaleIconClickable {  showNewPlaylistDialog = true },
+                    onClick = { },
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.library_add),
@@ -155,7 +157,8 @@ fun MyPlaylistsScreen(
                     LocalPlayListView(playlist = playlist, count = playlist.songsCount, onEdit = {
                         showNewPlaylistDialog = true
                         selectedPlaylist = playlist
-                    }, onDelete = {
+                    },
+                        onDelete = {
                         myPlaylistsViewModel.deletePlaylist(playlist)
                     }, selectPlaylist = {
                         navigator.navigate(LocalPlaylistScreenDestination(playlist.playlistId))
@@ -221,14 +224,15 @@ fun LibraryContentChipsView(
 
             Text(
                 modifier = Modifier
-                    .clip(MaterialTheme.shapes.extraSmall)
-                    .background(containerColor)
-                    .clickable {
+                    .scaleItemClickable(hapticType = HapticType.LIGHT) {
                         onClick(section.value)
                         coroutineScope.launch {
                             listState.animateScrollToItem(index)
                         }
                     }
+                    .clip(MaterialTheme.shapes.extraSmall)
+
+                    .background(containerColor)
                     .padding(20.dp, 10.dp),
                 text = stringResource(id = section.title),
                 textAlign = TextAlign.Center,

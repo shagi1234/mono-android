@@ -32,7 +32,7 @@ import com.mono.music.ui.theme.GrayTextColor
 import com.mono.music.ui.theme.SFFontFamily
 import com.mono.music.ui.theme.TransparentColor
 import com.mono.music.ui.theme.WhiteTextColor
-
+import com.mono.music.ui.utils.scaleItemClickable
 
 
 @Composable
@@ -50,10 +50,8 @@ fun AlbumView(
         .aspectRatio(1f)
     ) {
         Box(modifier = Modifier
-
+            .scaleItemClickable { onClick() }
             .clip(shape = MaterialTheme.shapes.large)
-            .background(DarkGray)
-            .clickable { onClick() }
         ){
 
             Image(

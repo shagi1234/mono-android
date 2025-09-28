@@ -137,7 +137,6 @@ fun SongsScreen(
             }
         },
         topBar = {
-
             CollapsingSmallTopAppBar(
                 title = title ?: stringResource(id = R.string.songs)
             ) {

@@ -158,7 +158,7 @@ class SettingsViewModel @Inject constructor(
     }
 
 
-    suspend fun saveUserData(user: User){
+    private suspend fun saveUserData(user: User){
         preferenceDataStoreHelper.putPreference(PHONE_KEY, "+993"+user.phone)
         preferenceDataStoreHelper.putPreference(NAME_KEY, user.name)
         preferenceDataStoreHelper.putPreference(PHONE_KEY, user.phone)

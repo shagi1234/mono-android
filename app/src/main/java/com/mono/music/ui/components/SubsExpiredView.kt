@@ -1,5 +1,6 @@
 package com.mono.music.ui.components
 
+import android.widget.Space
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -46,6 +48,9 @@ import com.mono.music.ui.theme.Red
 import com.mono.music.ui.theme.SFFontFamily
 import com.mono.music.ui.theme.WhiteTextColor
 import com.mono.music.ui.theme.Yellow
+import com.mono.music.ui.utils.scaleButtonClickable
+import com.mono.music.ui.utils.scaleIconClickable
+import com.mono.music.ui.utils.scaleItemClickable
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 
 @Composable
@@ -111,33 +116,47 @@ fun SubsExpiredView(
                 textAlign = TextAlign.Center
             )
 
-            Button(
+            Spacer(Modifier.height(32.dp))
+            CustomButton(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 32.dp),
+                    .padding(vertical = 16.dp),
                 shape = MaterialTheme.shapes.small,
-                onClick = { onNavigateToTariffs() },
-                contentPadding = PaddingValues(vertical = 16.dp),
-                colors = ButtonColors(
-                    containerColor = Yellow,
-                    contentColor = AlbumCoverBlackBG,
-                    disabledContentColor = AlbumCoverBlackBG,
-                    disabledContainerColor = Yellow,
-                )
+                containerColor = Yellow,
+                contentColor = AlbumCoverBlackBG,
+                text =  R.string.connect_service
             ) {
-                Text(
-                    text = stringResource(id = R.string.connect_service),
-                    color = AlbumCoverBlackBG,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    fontFamily = FormularFontFamily
-                )
+                onNavigateToTariffs()
             }
+
+//            Button(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(top = 32.dp),
+//                shape = MaterialTheme.shapes.small,
+//                onClick = { onNavigateToTariffs() },
+//                contentPadding = PaddingValues(vertical = 16.dp),
+//                colors = ButtonColors(
+//                    containerColor = Yellow,
+//                    contentColor = AlbumCoverBlackBG,
+//                    disabledContentColor = AlbumCoverBlackBG,
+//                    disabledContainerColor = Yellow,
+//                )
+//            ) {
+//                Text(
+//                    text = stringResource(id = R.string.connect_service),
+//                    color = AlbumCoverBlackBG,
+//                    fontWeight = FontWeight.Bold,
+//                    fontSize = 16.sp,
+//                    fontFamily = FormularFontFamily
+//                )
+//            }
 
             Text(
                 modifier = Modifier
                     .padding(vertical = 21.dp)
-                    .clickable { settingsViewModel.logout() },
+                    .scaleIconClickable { settingsViewModel.logout()  },
+
                 text = stringResource(id = R.string.log_out),
                 fontSize = 18.sp,
                 fontFamily = FormularFontFamily,

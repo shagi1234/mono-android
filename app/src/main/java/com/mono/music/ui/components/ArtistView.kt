@@ -35,6 +35,7 @@ import com.mono.music.ui.theme.GrayTextColor
 import com.mono.music.ui.theme.SFFontFamily
 import com.mono.music.ui.theme.WhiteTextColor
 import com.mono.music.ui.theme.Yellow
+import com.mono.music.ui.utils.scaleItemClickable
 
 @Composable
 fun ArtistView(
@@ -50,8 +51,9 @@ fun ArtistView(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp)
+            .scaleItemClickable { onClick() }
+
             .clip(shape = MaterialTheme.shapes.small)
-            .clickable { onClick() }
             .background(color = DarkGray),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)

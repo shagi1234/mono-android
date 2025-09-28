@@ -65,6 +65,7 @@ import com.mono.music.ui.theme.SFFontFamily
 import com.mono.music.ui.theme.Surface
 import com.mono.music.ui.theme.WhiteTextColor
 import com.mono.music.ui.theme.Yellow
+import com.mono.music.ui.utils.scaleIconClickable
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -133,9 +134,12 @@ fun TariffsScreenContent(
                     navigationIcon = {
                         IconButton(
                             modifier = Modifier
-                                .padding(vertical = 10.dp),
+                                .padding(vertical = 10.dp)
+                                .scaleIconClickable {
+                                    navigator?.navigateUp()
+                                },
                             onClick = {
-                                navigator?.navigateUp()
+//                                navigator?.navigateUp()
                             }) {
                             Icon(
                                 tint = Color.White,
@@ -277,9 +281,14 @@ private fun PromoCodeSection(
                 )
             },
             trailingIcon = {
+
                 Button(
-                    modifier = Modifier.padding(12.dp),
-                    onClick = onCheckPromoCode,
+                    modifier = Modifier
+                        .padding(12.dp)
+                        .scaleIconClickable {
+                            onCheckPromoCode()
+                        },
+                    onClick = {},
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                         disabledContainerColor = Yellow.copy(alpha = 0.5f),
@@ -330,11 +339,11 @@ fun TariffsContentPreview() {
             image = "", days = 30,
         ),
 
-                Option(
-                name = "Premium 1 months",
-        image = "", days = 30,
-        price = 15
-    )
+        Option(
+            name = "Premium 1 months",
+            image = "", days = 30,
+            price = 15
+        )
 
     )
 

@@ -19,7 +19,6 @@ import com.mono.music.PlayerController
 import com.mono.music.R
 import com.mono.music.domain.models.Song
 import com.mono.music.player.DownloadTracker
-import com.mono.music.ui.components.SongView
 import com.mono.music.ui.components.SwipeableSongView
 import com.mono.music.ui.components.swipe.SwipeAction
 import com.mono.music.ui.components.swipe.SwipeableActionsBox

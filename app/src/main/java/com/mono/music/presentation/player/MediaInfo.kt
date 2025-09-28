@@ -25,6 +25,7 @@ import com.mono.music.ui.theme.SFFontFamily
 import com.mono.music.ui.theme.WhiteTextColor
 import com.mono.music.ui.theme.Yellow
 import com.mono.music.ui.utils.clickWithoutIndication
+import com.mono.music.ui.utils.scaleIconClickable
 
 @Composable
 fun MediaInfo(
@@ -82,8 +83,8 @@ fun MediaInfo(
                 color = WhiteTextColor
             )
         }
-        IconButton(onClick = {
-            onAddToPlaylistClick()
+        IconButton(
+            modifier = Modifier.scaleIconClickable { onAddToPlaylistClick() }, onClick = {
         }) {
             Icon(
                 modifier = Modifier.size(24.dp),

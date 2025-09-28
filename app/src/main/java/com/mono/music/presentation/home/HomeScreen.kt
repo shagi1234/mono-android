@@ -1,5 +1,8 @@
 package com.mono.music.presentation.home
 
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
@@ -8,19 +11,15 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,51 +27,67 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.media3.common.MediaItem
-import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.offline.Download
-import com.google.common.base.Preconditions
 import com.mono.music.MainActivity
 import com.mono.music.R
 import com.mono.music.di.DataModule
-import com.mono.music.domain.models.Artist
-import com.mono.music.domain.models.Playlist
-import com.mono.music.domain.models.Song
-import com.mono.music.presentation.artist.ArtistViewModel
 import com.mono.music.presentation.destinations.ArtistScreenDestination
 import com.mono.music.presentation.destinations.PlaylistScreenDestination
-import com.mono.music.presentation.destinations.SearchScreenDestination
-import com.mono.music.presentation.destinations.SettingsScreenDestination
-import com.mono.music.presentation.home.components.HomeTopAppBar
-import com.mono.music.presentation.myplaylist.MyPlaylistsViewModel
 import com.mono.music.presentation.player.NewPlaylistDialog
 import com.mono.music.ui.components.LoadingView
 import com.mono.music.ui.components.NetworkErrorView
-import com.mono.music.ui.components.SearchBar
 import com.mono.music.ui.components.bottomsheet.AddToPlaylistBottomSheet
 import com.mono.music.ui.components.bottomsheet.ArtistBottomSheet
 import com.mono.music.ui.components.bottomsheet.TrackBottomSheet
-import com.mono.music.ui.components.listview.AlbumListView
-import com.mono.music.ui.components.listview.ArtistListView
-import com.mono.music.ui.components.listview.PlaylistListView
-import com.mono.music.ui.components.listview.SongGridListView
 import com.mono.music.ui.theme.Inactive
 import com.mono.music.ui.theme.WhiteTextColor
 import com.mono.music.ui.utils.ShareUtils
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.annotation.RootNavGraph
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
-import com.ramcosta.composedestinations.navigation.navigate
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
-
+import android.view.MotionEvent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.input.pointer.pointerInteropFilter
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.sp
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.install.model.UpdateAvailability
+import com.mono.music.presentation.destinations.SearchScreenDestination
+import com.mono.music.presentation.destinations.SettingsScreenDestination
+import com.mono.music.presentation.home.components.HomeTopAppBar
+import com.mono.music.ui.components.CustomButton
+import com.mono.music.ui.components.HasUpdateBottomSheet
+import com.mono.music.ui.components.listview.AlbumListView
+import com.mono.music.ui.components.listview.ArtistListView
+import com.mono.music.ui.components.listview.PlaylistListView
+import com.mono.music.ui.components.listview.SongGridListView
+import com.mono.music.ui.utils.HapticType
+import com.mono.music.ui.utils.rememberHaptic
+import kotlinx.coroutines.tasks.await
+import timber.log.Timber
+import kotlin.math.truncate
+import androidx.core.net.toUri
 
 @OptIn(ExperimentalMaterial3Api::class)
 @RootNavGraph(start = true)
@@ -105,6 +120,8 @@ fun HomeScreen(
     var showArtistDialog by rememberSaveable {
         mutableStateOf(false)
     }
+    var showUpdateSheet by rememberSaveable { mutableStateOf(false) }
+
 
     val playlistSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val artistsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -112,8 +129,26 @@ fun HomeScreen(
     val songSettingsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val snackbarMessage = stringResource(id = R.string.successfully_added)
     val snackbarSuccessMessage = stringResource(id = R.string.subscription_extended)
+
+    LaunchedEffect(uiState) {
+        Log.e("TAG___STATE", "HomeScreen: $uiState")
+    }
+
+
+
+    LaunchedEffect(Unit) {
+        val appUpdateManager = AppUpdateManagerFactory.create(context)
+        appUpdateManager.appUpdateInfo.addOnSuccessListener { updateAvailable ->
+            if (updateAvailable.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE) {
+                showUpdateSheet = true
+            }
+        }.addOnFailureListener { exception ->
+            Timber.tag("UpdateCheck").e("Failure on check update: ${exception.message}")
+
+        }
+
+    }
 
     LaunchedEffect(uiState.message) {
         if (uiState.message.isNullOrEmpty()) {
@@ -141,8 +176,7 @@ fun HomeScreen(
                 )
             }
         },
-    ) { padding ->
-
+    ) { _ ->
 
         LazyColumn(
             Modifier
@@ -156,7 +190,9 @@ fun HomeScreen(
                     onSearchClicked = { navigator.navigate(SearchScreenDestination) },
                     onSettingsClicked = { navigator.navigate(SettingsScreenDestination) }
                 )
+
             }
+
 
             if (uiState.isSuccess) {
                 uiState.data?.let { mainScreenData ->
@@ -237,7 +273,6 @@ fun HomeScreen(
 
         }
         when {
-
 
             uiState.isLoading -> {
                 LoadingView(Modifier.fillMaxSize(1f))
@@ -335,6 +370,15 @@ fun HomeScreen(
             )
         }
 
+        if (showUpdateSheet) {
+            HasUpdateBottomSheet(
+                onUpdateClick = { navigateToPlayMarket(context=context) },
+                onCloseClick = {
+                    showUpdateSheet= false
+                })
+
+        }
+
         if (uiState.isPending) {
             Dialog(
                 onDismissRequest = { },
@@ -345,6 +389,28 @@ fun HomeScreen(
             }
         }
 
+    }
+}
+
+fun navigateToPlayMarket(context: Context, packageName: String = context.packageName) {
+    try {
+        // Пытаемся открыть через Play Market приложение
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            data = "market://details?id=$packageName".toUri()
+            setPackage("com.android.vending")
+        }
+        context.startActivity(intent)
+    } catch (e: ActivityNotFoundException) {
+        // Если Play Market не установлен, открываем через браузер
+        try {
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                data = "https://play.google.com/store/apps/details?id=$packageName".toUri()
+            }
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            // Если и браузер недоступен
+            e.printStackTrace()
+        }
     }
 }
 

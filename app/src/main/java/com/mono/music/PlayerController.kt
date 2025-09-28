@@ -163,7 +163,7 @@ class PlayerController @Inject constructor(
             try {
                 // Check if it's the exact same track AND the player is already playing
                 if (track == selectedTrack && myPlayer.playerState.value == PlayerStates.STATE_PLAYING) {
-                    onPlayPauseClick()
+//                    onPlayPauseClick()
                     return
                 }
 
@@ -196,9 +196,8 @@ class PlayerController @Inject constructor(
     fun init(track: Int, songs: List<Song>) {
         myPlayer.iniPlayer(songs.toMediaItemList())
         observePlayerState()
-        if (!_tracks.isEmpty()) {
-            _tracks.removeRange(0, tracks.size)
-        }
+
+        _tracks.clear()
         _tracks.addAll(songs)
 
         // Don't start service here - only start it when track is selected

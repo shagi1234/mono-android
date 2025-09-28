@@ -78,9 +78,13 @@ import com.mono.music.ui.theme.GrayTextColor
 import com.mono.music.ui.theme.Inactive
 import com.mono.music.ui.theme.TransparentColor
 import com.mono.music.ui.theme.WhiteTextColor
+import com.mono.music.ui.utils.HapticType
 import com.mono.music.ui.utils.ScreenTransition
 import com.mono.music.ui.utils.ShareUtils
 import com.mono.music.ui.utils.clickWithoutIndication
+import com.mono.music.ui.utils.rememberHaptic
+import com.mono.music.ui.utils.rememberUniversalHaptic
+import com.mono.music.ui.utils.scaleIconClickable
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.launch
@@ -134,6 +138,7 @@ fun PlaylistScreen(
     val scope = rememberCoroutineScope()
     val snackbarMessage = stringResource(id = R.string.successfully_added)
     val addToQueueMessage = stringResource(id = R.string.successfully_added)
+    val haptic = rememberHaptic()
 
     val listState = rememberLazyListState()
 
@@ -192,8 +197,9 @@ fun PlaylistScreen(
             },
             topBar = {
                 TopBar(
-                    modifier = Modifier.background(Color.Red),
+                    modifier = Modifier.background(Color.Red).clickWithoutIndication { navigator.navigateUp() },
                     onBack = {
+                        haptic(HapticType.MEDIUM)
                         navigator.navigateUp()
                     },
                 ) {

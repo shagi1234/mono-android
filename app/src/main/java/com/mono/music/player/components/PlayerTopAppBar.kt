@@ -1,5 +1,6 @@
 package com.mono.music.player.components
 
+import android.view.Display.Mode
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -31,6 +32,7 @@ import com.mono.music.ui.theme.AlbumCoverBlackBG
 import com.mono.music.ui.theme.SFFontFamily
 import com.mono.music.ui.theme.WhiteTextColor
 import com.mono.music.ui.utils.clickWithoutIndication
+import com.mono.music.ui.utils.scaleIconClickable
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,7 +51,9 @@ fun PlayerTopAppBar(
     Row( modifier = Modifier
         .fillMaxWidth().statusBarsPadding().padding(vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically) {
-        IconButton(onClick = { goBack() }) {
+        IconButton(
+            modifier = Modifier.scaleIconClickable { goBack() },
+            onClick = {}) {
             Icon(
                 tint = WhiteTextColor,
                 painter = painterResource(id = R.drawable.arrow_down),
@@ -97,7 +101,9 @@ fun PlayerTopAppBar(
             }
         }
 
-        IconButton(onClick = { onMoreClicked() }) {
+        IconButton(
+            modifier = Modifier.scaleIconClickable { onMoreClicked() },
+            onClick = {}) {
             Icon(
                 tint = WhiteTextColor,
                 painter = painterResource(id = R.drawable.ic_more_hor),

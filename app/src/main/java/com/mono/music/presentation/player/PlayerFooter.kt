@@ -11,14 +11,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.mono.music.R
 import com.mono.music.ui.theme.WhiteTextColor
+import com.mono.music.ui.utils.scaleIconClickable
 
 @Composable
-fun PlayerFooter(onShowPlaylistBottomSheet: ()-> Unit) {
+fun PlayerFooter(onShowPlaylistBottomSheet: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         IconButton(
+            modifier = Modifier.scaleIconClickable { },
             onClick = { }
         ) {
             Icon(
@@ -29,9 +31,8 @@ fun PlayerFooter(onShowPlaylistBottomSheet: ()-> Unit) {
         }
 
         IconButton(
-            onClick = {
-                onShowPlaylistBottomSheet
-            }
+            modifier = Modifier.scaleIconClickable { onShowPlaylistBottomSheet() },
+            onClick = {}
         ) {
             Icon(
                 tint = WhiteTextColor,

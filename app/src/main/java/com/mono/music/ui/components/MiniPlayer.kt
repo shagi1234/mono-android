@@ -69,6 +69,9 @@ import com.mono.music.ui.theme.WhiteTextColor
 import com.mono.music.ui.theme.Yellow
 import com.mono.music.ui.utils.darken
 import com.mono.music.ui.utils.getDominantColorFromImageUrl
+import com.mono.music.ui.utils.scaleButtonClickable
+import com.mono.music.ui.utils.scaleIconClickable
+import com.mono.music.ui.utils.scaleItemClickable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -134,7 +137,7 @@ fun MiniPlayer(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onClick() }
+                .scaleItemClickable { onClick() }
                 .background(dominantColor.value.darken(0.5f))
                 .padding(10.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -167,7 +170,9 @@ fun MiniPlayer(
                     )
 
                     Column(
-                        modifier = Modifier.weight(1f).padding(end = 10.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 10.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
@@ -203,12 +208,13 @@ fun MiniPlayer(
 
             IconButton(
                 modifier = Modifier
+                    .scaleIconClickable { onPlayPauseClick() }
                     .padding(end = 5.dp)
                     .size(35.dp),
                 colors = IconButtonDefaults.iconButtonColors(
                     containerColor = Yellow
                 ),
-                onClick = onPlayPauseClick,
+                onClick = {  },
             ) {
                 Icon(
                     painter = if (song.isPlaying()) painterResource(id = R.drawable.pause) else painterResource(
@@ -240,10 +246,13 @@ fun MiniPlayer(
                 ),
                 thumb = {
                     SliderDefaults.Thumb(
-                        modifier = Modifier.offset(x = 0.dp).pulsatingEffect(
-                            if (currentPosTemp == 0f) currentMediaProgress else currentPosTemp,
-                            isVisible = playerController.selectedTrack?.isBuffering() == true,
-                            color = MaterialTheme.colorScheme.primary.copy(0.5f)),
+                        modifier = Modifier
+                            .offset(x = 0.dp)
+                            .pulsatingEffect(
+                                if (currentPosTemp == 0f) currentMediaProgress else currentPosTemp,
+                                isVisible = playerController.selectedTrack?.isBuffering() == true,
+                                color = MaterialTheme.colorScheme.primary.copy(0.5f)
+                            ),
                         interactionSource = remember { MutableInteractionSource() },
                         thumbSize = DpSize(0.dp, 0.dp)
                     )

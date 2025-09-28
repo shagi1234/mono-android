@@ -26,6 +26,7 @@ import com.mono.music.R
 import com.mono.music.ui.theme.SFFontFamily
 import com.mono.music.ui.theme.Surface
 import com.mono.music.ui.theme.WhiteTextColor
+import com.mono.music.ui.utils.scaleItemClickable
 
 
 @Composable
@@ -35,7 +36,7 @@ fun KeyView(
 ) {
 
     Text(
-        modifier = Modifier.clip(MaterialTheme.shapes.extraSmall).background(Surface).clickable { onSearch(key) }.padding(10.dp, 7.dp),
+        modifier = Modifier.clip(MaterialTheme.shapes.extraSmall).background(Surface).scaleItemClickable { onSearch(key) }.padding(10.dp, 7.dp),
         text = key,
         style = TextStyle(
             fontSize = 12.sp,

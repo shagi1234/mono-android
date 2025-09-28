@@ -27,6 +27,7 @@ import com.mono.music.domain.models.User
 import com.mono.music.ui.theme.DarkGray
 import com.mono.music.ui.theme.GrayTextColor
 import com.mono.music.ui.theme.WhiteTextColor
+import com.mono.music.ui.utils.scaleItemClickable
 
 
 @Composable
@@ -40,7 +41,7 @@ fun SettingsTopAppBar (
             .fillMaxWidth()
             .background(DarkGray, MaterialTheme.shapes.medium)
             .clip(MaterialTheme.shapes.medium)
-            .clickable { onClick() }
+            .scaleItemClickable { onClick() }
             .padding(12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically

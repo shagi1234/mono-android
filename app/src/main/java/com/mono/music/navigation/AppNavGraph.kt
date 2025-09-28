@@ -76,8 +76,6 @@ fun AppNavGraph(
 
     val navController = rememberNavController()
 
-
-
     val scope = rememberCoroutineScope()
 
     var isNowPlayingScreenVisible by remember { mutableStateOf(false) }
@@ -295,6 +293,7 @@ fun AppNavGraph(
 
 
             }
+
 
             if (showSubscribe && destination.shouldShowScaffoldElements()) {
                 SubsExpiredView {

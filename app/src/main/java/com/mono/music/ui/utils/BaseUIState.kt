@@ -21,11 +21,6 @@ data class BaseUIState<T>(
         return copy(isPending = false, message = null)
     }
 
-    fun updateToSuccessful(): BaseUIState<T> {
-        return copy(isSuccess = true, isLoading = false, isFailure = false)
-    }
-
-
     fun updateMessage(message: String?): BaseUIState<T> {
         return copy(
             isPending = false, message = message

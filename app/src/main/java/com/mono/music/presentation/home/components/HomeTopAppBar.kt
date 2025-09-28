@@ -15,6 +15,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.mono.music.R
 import com.mono.music.ui.theme.WhiteTextColor
+import com.mono.music.ui.utils.ICON_PRESS
+import com.mono.music.ui.utils.scaleIconClickable
 
 
 @Composable
@@ -39,8 +41,10 @@ fun HomeTopAppBar(
 
         Spacer(modifier = Modifier.weight(1f))
 
+
         IconButton(
-            onClick = onSearchClicked,
+            modifier = Modifier.scaleIconClickable (pressValue = ICON_PRESS, onClick = onSearchClicked),
+            onClick = {},
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_explore),
@@ -50,7 +54,8 @@ fun HomeTopAppBar(
         }
 
         IconButton(
-            onClick = onSettingsClicked,
+            modifier = Modifier.scaleIconClickable(onClick = onSettingsClicked),
+            onClick = {},
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_settings),

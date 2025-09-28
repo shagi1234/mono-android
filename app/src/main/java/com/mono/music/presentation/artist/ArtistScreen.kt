@@ -76,6 +76,7 @@ import com.mono.music.presentation.player.NewPlaylistDialog
 import com.mono.music.ui.CollapsibleScaffold
 import com.mono.music.ui.TopBar
 import com.mono.music.ui.components.ArtistCircleItem
+import com.mono.music.ui.components.CustomButton
 import com.mono.music.ui.components.HeaderView
 import com.mono.music.ui.components.LoadingView
 import com.mono.music.ui.components.NetworkErrorView
@@ -91,6 +92,7 @@ import com.mono.music.ui.theme.TransparentColor
 import com.mono.music.ui.theme.WhiteTextColor
 import com.mono.music.ui.utils.ScreenTransition
 import com.mono.music.ui.utils.ShareUtils
+import com.mono.music.ui.utils.scaleButtonClickable
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.launch
@@ -172,8 +174,8 @@ fun ArtistScreen(
     val configuration = LocalConfiguration.current
     val screenWidth = (configuration.screenWidthDp * 1.1).dp
 
-    LaunchedEffect(uiState.message){
-        if (!uiState.message.isNullOrEmpty()){
+    LaunchedEffect(uiState.message) {
+        if (!uiState.message.isNullOrEmpty()) {
             scope.launch {
                 snackbarHostState.showSnackbar(
                     uiState.message!!
@@ -284,26 +286,39 @@ fun ArtistScreen(
                 // Play All Button - positioned in bottom right corner
                 uiState.data?.let { data ->
                     if (data.songs.isNotEmpty()) {
-                        FloatingActionButton(
-                            onClick = {
-                                // Play all songs from the artist
-                                artistViewModel.getPlayerController().init(data.songs[0], data.songs)
-                            },
+                        CustomButton(
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
                                 .padding(16.dp)
                                 .size(60.dp)
                                 .alpha(if (fraction < 0.3f) 0f else fraction),
                             shape = CircleShape,
+                            contentColor = Color.Black,
                             containerColor = Color(0xFFFFA500), // Orange color
-                            contentColor = Color.Black
+                            leadingIcon = R.drawable.play,
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.PlayArrow,
-                                contentDescription = "Play All",
-                                modifier = Modifier.size(24.dp)
-                            )
+                            artistViewModel.getPlayerController().init(data.songs[0], data.songs)
                         }
+//                        FloatingActionButton(
+//                            onClick = {
+//                                // Play all songs from the artist
+//                                artistViewModel.getPlayerController().init(data.songs[0], data.songs)
+//                            },
+//                            modifier = Modifier
+//                                .align(Alignment.BottomEnd)
+//                                .padding(16.dp)
+//                                .size(60.dp)
+//                                .alpha(if (fraction < 0.3f) 0f else fraction),
+//                            shape = CircleShape,
+//                            containerColor = Color(0xFFFFA500), // Orange color
+//                            contentColor = Color.Black
+//                        ) {
+//                            Icon(
+//                                imageVector = Icons.Default.PlayArrow,
+//                                contentDescription = "Play All",
+//                                modifier = Modifier.size(24.dp)
+//                            )
+//                        }
                     }
                 }
 
@@ -321,7 +336,8 @@ fun ArtistScreen(
 
                 item {
                     if (data.hasLatestRelease()) {
-                        LatestReleaseView(latestRelease = data.latestRelease,
+                        LatestReleaseView(
+                            latestRelease = data.latestRelease,
                             navigateToAlbum = { album ->
                                 navigator.navigate(
                                     PlaylistScreenDestination(
@@ -357,7 +373,8 @@ fun ArtistScreen(
                 }
 
                 items(data.songs) { song ->
-                    SwipeableSongView(song = song,
+                    SwipeableSongView(
+                        song = song,
                         playerController = artistViewModel.getPlayerController(),
                         onMoreClicked = {
                             artistViewModel.selectedSong = it
@@ -380,7 +397,8 @@ fun ArtistScreen(
                     Box(
                         modifier = Modifier.padding(top = 20.dp),
                     ) {
-                        AlbumListView(playlists = data.albums,
+                        AlbumListView(
+                            playlists = data.albums,
                             expandable = true,
                             navigateToAlbums = {
                                 navigator.navigate(
@@ -416,7 +434,8 @@ fun ArtistScreen(
                 }
 
                 items(data.singles) { song ->
-                    SwipeableSongView(song = song,
+                    SwipeableSongView(
+                        song = song,
                         onMoreClicked = {
                             artistViewModel.selectedSong = it
                             settingsClicked = true
@@ -518,7 +537,8 @@ fun ArtistScreen(
 
 
         if (addToPlaylistClicked) {
-            AddToPlaylistBottomSheet(selectedSong = artistViewModel.selectedSong,
+            AddToPlaylistBottomSheet(
+                selectedSong = artistViewModel.selectedSong,
                 playlists = playlists,
                 playlistSheetState = playlistSheetState,
                 onCreateNewPlaylist = {
@@ -544,7 +564,8 @@ fun ArtistScreen(
         }
 
         if (showArtistDialog) {
-            ArtistBottomSheet(selectedSong = artistViewModel.selectedSong,
+            ArtistBottomSheet(
+                selectedSong = artistViewModel.selectedSong,
                 artists = artistViewModel.selectedSong.artists,
                 sheetState = artistsSheetState,
                 onSelect = { artist -> navigator.navigate(ArtistScreenDestination(artist.id)) },

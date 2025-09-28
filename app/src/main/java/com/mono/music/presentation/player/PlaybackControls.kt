@@ -4,6 +4,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -57,13 +58,17 @@ import com.mono.music.PlayerController
 import com.mono.music.R
 import com.mono.music.player.PlaybackState
 import com.mono.music.player.PlayerStates
+import com.mono.music.ui.components.CustomButton
 import com.mono.music.ui.theme.AlbumCoverBlackBG
 import com.mono.music.ui.theme.Background
 import com.mono.music.ui.theme.GrayTextColor
 import com.mono.music.ui.theme.SFFontFamily
 import com.mono.music.ui.theme.WhiteTextColor
 import com.mono.music.ui.theme.Yellow
+import com.mono.music.ui.utils.HEAVY_PRESS
 import com.mono.music.ui.utils.formatTime
+import com.mono.music.ui.utils.scaleButtonClickable
+import com.mono.music.ui.utils.scaleIconClickable
 import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -180,12 +185,15 @@ fun PlaybackControls(
             verticalAlignment = Alignment.CenterVertically
         ) {
 
-            IconButton(modifier = Modifier.weight(.8f), onClick = {
-                playerController.toggleShuffle()
-                shuffleEnabled = playerController.getShuffleMode()
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-
-            }) {
+            IconButton(
+                modifier = Modifier
+                    .weight(.8f)
+                    .scaleIconClickable {
+                        playerController.toggleShuffle()
+                        shuffleEnabled = playerController.getShuffleMode()
+                    },
+                onClick = {}
+            ) {
                 Icon(
                     painter = painterResource(id = R.drawable.shuffle),
                     contentDescription = stringResource(id = R.string.shuffle),
@@ -194,8 +202,10 @@ fun PlaybackControls(
             }
             IconButton(
                 enabled = hasPrev,
-                modifier = Modifier.weight(.8f),
-                onClick = playerController::onPreviousClick
+                modifier = Modifier
+                    .weight(.8f)
+                    .scaleIconClickable(onClick = playerController::onPreviousClick),
+                onClick = {}
             ) {
                 Icon(
                     modifier = Modifier.size(44.dp),
@@ -204,17 +214,17 @@ fun PlaybackControls(
                     tint = if (hasPrev) WhiteTextColor else GrayTextColor
                 )
             }
+
             FloatingActionButton(
                 modifier = Modifier
                     .size(74.dp)
-                    .clip(shape = CircleShape),
-                onClick = {
-                    if (playerState == PlayerStates.STATE_PLAYING || playerState == PlayerStates.STATE_PAUSE) {
-                        playerController.onPlayPauseClick()
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    .scaleIconClickable {
+                        if (playerState == PlayerStates.STATE_PLAYING || playerState == PlayerStates.STATE_PAUSE) {
+                            playerController.onPlayPauseClick()
+                        }
                     }
-
-                },
+                    .clip(shape = CircleShape),
+                onClick = {},
                 containerColor = Yellow,
                 contentColor = AlbumCoverBlackBG,
             ) {
@@ -239,8 +249,10 @@ fun PlaybackControls(
             }
             IconButton(
                 enabled = hasNext,
-                modifier = Modifier.weight(.8f), onClick = playerController::onNextClick
-            ) {
+                modifier = Modifier
+                    .weight(.8f)
+                    .scaleIconClickable(onClick = playerController::onNextClick),
+                onClick = {}) {
                 Icon(
                     modifier = Modifier.size(44.dp),
                     painter = painterResource(id = R.drawable.media_skip_forward),
@@ -251,25 +263,33 @@ fun PlaybackControls(
             val painter = if (repeatMode == REPEAT_MODE_ONE) R.drawable.repeat_one
             else R.drawable.repeat
 
-            IconButton(modifier = Modifier.weight(.8f), onClick = {
-                when (playerController.getRepeatMode()) {
-                    REPEAT_MODE_OFF -> {
-                        playerController.setRepeatMode(REPEAT_MODE_ALL)
-                    }
+            IconButton(
+                modifier = Modifier
+                    .weight(.8f)
+                    .scaleIconClickable(
+                        onClick =
+                            {
+                                when (playerController.getRepeatMode()) {
+                                    REPEAT_MODE_OFF -> {
+                                        playerController.setRepeatMode(REPEAT_MODE_ALL)
+                                    }
 
-                    REPEAT_MODE_ALL -> {
-                        playerController.setRepeatMode(REPEAT_MODE_ONE)
+                                    REPEAT_MODE_ALL -> {
+                                        playerController.setRepeatMode(REPEAT_MODE_ONE)
 
-                    }
+                                    }
 
-                    REPEAT_MODE_ONE -> {
-                        playerController.setRepeatMode(REPEAT_MODE_OFF)
+                                    REPEAT_MODE_ONE -> {
+                                        playerController.setRepeatMode(REPEAT_MODE_OFF)
 
-                    }
-                }
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                repeatMode = playerController.getRepeatMode()
-            }) {
+                                    }
+                                }
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                repeatMode = playerController.getRepeatMode()
+                            }
+                    ),
+                onClick = {}
+            ) {
                 Icon(
                     painter = painterResource(id = painter),
                     contentDescription = stringResource(id = R.string.repeat),

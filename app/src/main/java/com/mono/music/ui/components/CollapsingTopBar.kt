@@ -23,6 +23,7 @@ import com.mono.music.R
 import com.mono.music.ui.theme.AlbumCoverBlackBG
 import com.mono.music.ui.theme.SFFontFamily
 import com.mono.music.ui.theme.WhiteTextColor
+import com.mono.music.ui.utils.scaleIconClickable
 
 
 @Composable
@@ -38,7 +39,11 @@ fun CollapsingSmallTopAppBar(
             .fillMaxWidth().background(Color.Transparent).padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = { goBack() }) {
+        IconButton(
+            modifier = Modifier.scaleIconClickable {
+                goBack()
+            },
+            onClick = { }) {
             Icon(
                 tint = WhiteTextColor,
                 painter = painterResource(id = navigationIcon),
@@ -57,8 +62,8 @@ fun CollapsingSmallTopAppBar(
 
         if (trailingIcon != null) {
             IconButton(
-                modifier = Modifier.padding(5.dp, 20.dp),
-                onClick = { onIconClick() },
+                modifier = Modifier.padding(5.dp, 20.dp).scaleIconClickable { onIconClick() },
+                onClick = {  },
             ) {
                 Icon(
                     modifier = Modifier.size(24.dp),

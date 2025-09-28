@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName
 import javax.annotation.concurrent.Immutable
 
 @Immutable
-data class MainScreenData(
+data class      MainScreenData(
     val tops: List<Playlist>,
     @SerializedName("artists_of_the_week")
     val artists: List<Artist>,

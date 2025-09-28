@@ -34,6 +34,8 @@ import com.mono.music.ui.theme.SFFontFamily
 import com.mono.music.ui.theme.TransparentColor
 import com.mono.music.ui.theme.WhiteTextColor
 import com.mono.music.ui.theme.Yellow
+import com.mono.music.ui.utils.scaleButtonClickable
+import com.mono.music.ui.utils.scaleItemClickable
 
 @Composable
 fun SubscriptionOptionView(
@@ -42,7 +44,7 @@ fun SubscriptionOptionView(
 ) {
     Row(
         modifier = Modifier
-            .clickable { onClick() }
+            .scaleItemClickable { onClick() }
             .padding(15.dp, 13.dp),
         horizontalArrangement = Arrangement.spacedBy(15.dp),
         verticalAlignment = Alignment.CenterVertically) {
@@ -104,10 +106,11 @@ fun UpdatedSubscriptionOptionView(
 ) {
     Row(
         modifier = Modifier
-            .clip(MaterialTheme.shapes.small)
             .border(1.dp, if (selected) Yellow else TransparentColor, MaterialTheme.shapes.medium)
+            .scaleItemClickable { onClick() }
+            .clip(MaterialTheme.shapes.small)
             .background(MaterialTheme.colorScheme.onBackground.copy(alpha = 0.1f))
-            .clickable { onClick() }
+//            .scaleButtonClickable(containerColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.1f), darkenFactor = 0f) { onClick() }
             .padding(horizontal = 12.dp, vertical = 20.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.Top) {
@@ -170,7 +173,11 @@ fun FreeSubscriptionOptionView(
     option: Option,
     onClick: () -> Unit
 ) {
-    Box {
+    Box(
+        modifier = Modifier
+            .scaleItemClickable { onClick() }
+            .clip(MaterialTheme.shapes.medium)
+    ) {
         Image(
             modifier = Modifier
                 .fillMaxSize()
@@ -182,12 +189,16 @@ fun FreeSubscriptionOptionView(
 
         Row(
             modifier = Modifier
-                .clip(MaterialTheme.shapes.medium)
-                .border(1.dp, if (selected) Yellow else TransparentColor, MaterialTheme.shapes.medium)
-                .clickable { onClick() }
+                .border(
+                    1.dp,
+                    if (selected) Yellow else TransparentColor,
+                    MaterialTheme.shapes.medium
+                )
+
                 .padding(12.dp, 20.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.Top) {
+            verticalAlignment = Alignment.Top
+        ) {
 
             Icon(
                 modifier = Modifier.size(24.dp),

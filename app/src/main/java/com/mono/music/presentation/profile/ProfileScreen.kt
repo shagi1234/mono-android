@@ -278,18 +278,18 @@ fun ProfileScreen(
                         modifier = Modifier.padding(start = 6.dp)
                     )
                 }
-                Row(Modifier.selectableGroup()) {
-                    genders.forEach { gender ->
-                        Row(
-                            Modifier, verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(selected = (gender.value == selectedGender), onClick = {
-                                profileViewModel.setGender(gender)
-                            })
-                            Text(text = stringResource(id = gender.name), fontSize = 14.sp)
-                        }
-                    }
-                }
+//                Row(Modifier.selectableGroup()) {
+//                    genders.forEach { gender ->
+//                        Row(
+//                            Modifier, verticalAlignment = Alignment.CenterVertically
+//                        ) {
+//                            RadioButton(selected = (gender.value == selectedGender), onClick = {
+//                                profileViewModel.setGender(gender)
+//                            })
+//                            Text(text = stringResource(id = gender.name), fontSize = 14.sp)
+//                        }
+//                    }
+//                }
 
                 Spacer(modifier = Modifier.weight(1f))
 

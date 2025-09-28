@@ -73,7 +73,8 @@ class MyPlayer @Inject constructor(
     }
 
     private fun initializeMediaController() {
-        val sessionToken = SessionToken(context, ComponentName(context, PlaybackService::class.java))
+        val sessionToken =
+            SessionToken(context, ComponentName(context, PlaybackService::class.java))
 
         controllerFuture = MediaController.Builder(context, sessionToken).buildAsync()
         controllerFuture.addListener({
@@ -101,6 +102,7 @@ class MyPlayer @Inject constructor(
         val wasShuffled = mediaController.shuffleModeEnabled
         mediaController.shuffleModeEnabled = false
 
+        mediaController.stop()
         mediaController.setMediaItems(trackList)
         mediaController.prepare()
 
@@ -109,10 +111,17 @@ class MyPlayer @Inject constructor(
             mediaController.shuffleModeEnabled = true
         }
 
-        if (!mediaController.isPlaying) mediaController.play()
+        mediaController.playWhenReady = true
+        mediaController.play()
 
         // Explicitly emit the state to ensure UI updates
         playerState.tryEmit(STATE_PLAYING)
+
+        handler.postDelayed({
+            playPause()
+            // Принудительно эмитим состояние воспроизведения
+            playerState.tryEmit(STATE_PLAYING)
+        }, 100)
     }
 
     fun addMediaItem(index: Int, track: MediaItem) {
@@ -207,6 +216,7 @@ class MyPlayer @Inject constructor(
             }, 100)
         }
     }
+
     override fun onEvents(player: Player, events: Player.Events) {
         hasNext.tryEmit(player.hasNextMediaItem())
         hasPrev.tryEmit(player.hasPreviousMediaItem())
