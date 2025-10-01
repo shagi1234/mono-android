@@ -1,5 +1,6 @@
 package com.mono.music.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -49,13 +51,15 @@ import com.mono.music.ui.utils.scaleItemClickable
 fun LocalPlayListView(
     playlist: Playlist,
     count: Int,
+    isFavorites: Boolean = false,
     selectPlaylist: () -> Unit,
     onDelete: () -> Unit = {},
     onEdit: () -> Unit
 ) {
     val localPlaylistViewModel = hiltViewModel<LocalPlaylistViewModel>()
 
-    val play by localPlaylistViewModel.getPlaylist(playlist.playlistId).collectAsState(initial = null)
+    val play by localPlaylistViewModel.getPlaylist(playlist.playlistId)
+        .collectAsState(initial = null)
 
     var expanded by remember {
         mutableStateOf(false)
@@ -74,11 +78,22 @@ fun LocalPlayListView(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically) {
 
-        ImageGrid(
-            imageUrls = play?.getPlaylistImage() ?: emptyList(),
-            fraction = 1f,
-            isSmall = true
-        )
+        if (isFavorites)
+            Image(
+                painter = painterResource(id = R.drawable.fav_playlist_imag),
+                contentDescription = "Favorites image",
+                modifier = Modifier
+                    .size(60.dp)
+                    .clip(RoundedCornerShape(16.dp)),
+                contentScale = ContentScale.Crop // how the image is scaled
+            )
+        else
+
+            ImageGrid(
+                imageUrls = play?.getPlaylistImage() ?: emptyList(),
+                fraction = 1f,
+                isSmall = true
+            )
 
         Column(
             modifier = Modifier.weight(1f),
@@ -137,41 +152,43 @@ fun LocalPlayListView(
             }
 
         }
-        Box {
-            IconButton(
-                modifier = Modifier.scaleIconClickable { expanded = true },
-                onClick = { },
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.song_setting),
-                    contentDescription = "playlist setting",
-                    tint = WhiteTextColor
-                )
-            }
+        if (!isFavorites)
+            Box {
 
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
+                IconButton(
+                    modifier = Modifier.scaleIconClickable { expanded = true },
+                    onClick = { },
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.song_setting),
+                        contentDescription = "playlist setting",
+                        tint = WhiteTextColor
+                    )
+                }
 
-                if (!playlist.isBuiltin) {
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+
+                    if (!playlist.isBuiltin) {
+                        DropdownMenuItem(
+                            text = { Text(text = stringResource(R.string.edit)) },
+                            onClick = {
+                                onEdit()
+                                expanded = false
+                            })
+
+                    }
                     DropdownMenuItem(
-                        text = { Text(text = stringResource(R.string.edit)) },
+
+                        text = { Text(text = stringResource(R.string.delete)) },
                         onClick = {
-                            onEdit()
+                            onDelete()
                             expanded = false
                         })
-
                 }
-                DropdownMenuItem(
-
-                    text = { Text(text = stringResource(R.string.delete)) },
-                    onClick = {
-                        onDelete()
-                        expanded = false
-                    })
             }
-        }
 
     }
 }

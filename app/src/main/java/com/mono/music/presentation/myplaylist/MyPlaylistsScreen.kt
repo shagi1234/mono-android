@@ -1,7 +1,10 @@
+@file:OptIn(ExperimentalFoundationApi::class)
+
 package com.mono.music.presentation.myplaylist
 
 import android.util.Log
 import androidx.annotation.StringRes
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -27,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -79,6 +83,7 @@ fun MyPlaylistsScreen(
         mutableStateOf(false)
     }
 
+
     var selectedPlaylist by remember {
         mutableStateOf<Playlist?>(null)
     }
@@ -93,6 +98,9 @@ fun MyPlaylistsScreen(
         LibrarySection.Album,
         LibrarySection.Downloads
     )
+
+
+    val favoritesCount by myPlaylistsViewModel.favoritesCount.collectAsState(initial = 0)
 
     LaunchedEffect(uiState.message) {
         if (!uiState.message.isNullOrEmpty()) {
@@ -122,7 +130,7 @@ fun MyPlaylistsScreen(
                     fontWeight = FontWeight.Bold
                 )
                 IconButton(
-                    modifier = Modifier.scaleIconClickable {  showNewPlaylistDialog = true },
+                    modifier = Modifier.scaleIconClickable { showNewPlaylistDialog = true },
                     onClick = { },
                 ) {
                     Icon(
@@ -150,19 +158,42 @@ fun MyPlaylistsScreen(
             ) { type ->
                 myPlaylistsViewModel.setType(type)
             }
+
             LazyColumn(
                 contentPadding = PaddingValues(top = 10.dp, bottom = 100.dp)
             ) {
+                val favoritesPlaylist = Playlist(
+                    playlistId = -1L,
+                    name = "Favorites",
+                )
+                // Add static "Favorites" item
+                if (type == ALL)
+                    item {
+                        LocalPlayListView(
+                            playlist = favoritesPlaylist,
+                            count = favoritesCount,
+                            onEdit = {
+                                showNewPlaylistDialog = true
+                                selectedPlaylist = favoritesPlaylist
+                            },
+                            isFavorites = true,
+                            onDelete = {},
+                            selectPlaylist = {
+                                navigator.navigate(LocalPlaylistScreenDestination(-1L))
+                            }
+                        )
+                    }
                 items(playlists) { playlist ->
-                    LocalPlayListView(playlist = playlist, count = playlist.songsCount, onEdit = {
-                        showNewPlaylistDialog = true
-                        selectedPlaylist = playlist
-                    },
+                    LocalPlayListView(
+                        playlist = playlist, count = playlist.songsCount, onEdit = {
+                            showNewPlaylistDialog = true
+                            selectedPlaylist = playlist
+                        },
                         onDelete = {
-                        myPlaylistsViewModel.deletePlaylist(playlist)
-                    }, selectPlaylist = {
-                        navigator.navigate(LocalPlaylistScreenDestination(playlist.playlistId))
-                    })
+                            myPlaylistsViewModel.deletePlaylist(playlist)
+                        }, selectPlaylist = {
+                            navigator.navigate(LocalPlaylistScreenDestination(playlist.playlistId))
+                        })
 
 
                 }
@@ -220,7 +251,6 @@ fun LibraryContentChipsView(
             val containerColor = if (selected == section.value) Yellow else Surface
             val contentColor =
                 if (selected == section.value) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onBackground
-
 
             Text(
                 modifier = Modifier

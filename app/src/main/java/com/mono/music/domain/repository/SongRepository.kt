@@ -12,6 +12,8 @@ import com.mono.music.domain.models.Playlist
 import com.mono.music.domain.models.PlaylistAction
 import com.mono.music.domain.models.PlaylistSongCrossRef
 import com.mono.music.domain.models.PlaylistWithSongs
+import com.mono.music.domain.models.RequestLikeSong
+import com.mono.music.domain.models.ResponseSong
 import com.mono.music.domain.models.SearchData
 import com.mono.music.domain.models.Song
 import com.mono.music.domain.models.SongWithPlaylists
@@ -20,6 +22,8 @@ import com.mono.music.domain.paging.PlaylistPagingSource
 import com.mono.music.domain.paging.SongPagingSource
 import com.mono.music.domain.service.ApiService
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import retrofit2.http.Body
 import retrofit2.http.POST
@@ -48,6 +52,10 @@ class SongRepository @Inject constructor(
 
     suspend fun getPlaylist(id: Long, type: String): Playlist {
         return apiService.getPlaylist(type, id)
+    }
+
+    suspend fun getFavoriteSongs():Paging<ResponseSong>{
+        return apiService.favoriteSongs()
     }
 
     suspend fun getLocalPlaylist(id: Long): Playlist {
@@ -197,6 +205,14 @@ class SongRepository @Inject constructor(
 
     fun songExists(id: Long): Flow<Boolean> {
         return songDao.songExists(id)
+    }
+
+
+
+
+    suspend fun likeSong(songId:Long):Message{
+        val requestBody = RequestLikeSong(songId)
+        return  apiService.likeSong(requestBody)
     }
 
     companion object {

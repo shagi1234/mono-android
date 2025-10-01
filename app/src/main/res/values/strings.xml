@@ -149,6 +149,8 @@
     <string name="finish_register_desc">Ýörite teklipleri taýynlamak üçin goşmaça maglumatlaryňyzy giriziň</string>
     <string name="select_your_birthday">Select your birthday</string>
     <string name="reconnect">Täzeden baglan</string>
+    <string name="add_to_favorites">Halanlaryma goş</string>
+
 
 
 </resources>

@@ -8,6 +8,8 @@ import com.mono.music.domain.models.Message
 import com.mono.music.domain.models.Paging
 import com.mono.music.domain.models.Playlist
 import com.mono.music.domain.models.PlaylistAction
+import com.mono.music.domain.models.RequestLikeSong
+import com.mono.music.domain.models.ResponseSong
 import com.mono.music.domain.models.SearchData
 import com.mono.music.domain.models.Song
 import retrofit2.http.Body
@@ -57,6 +59,15 @@ interface ApiService {
         @Query("is_single") isSingle: Int,
     ): Paging<Song>
 
+
+    @GET("api/liked-songs")
+    suspend fun favoriteSongs(): Paging<ResponseSong>
+
+    @POST("api/like-song")
+    suspend fun likeSong(
+        @Body body: RequestLikeSong
+    ): Message
+
     @POST("api/playlist-to-library/")
     suspend fun playlistToLibrary(
         @Body body: PlaylistAction
@@ -102,5 +113,6 @@ interface ApiService {
     suspend fun listenedSong(
         @Query("song_id") songId: Long
     ): Message
+
 
 }

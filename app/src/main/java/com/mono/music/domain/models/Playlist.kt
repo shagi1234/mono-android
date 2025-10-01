@@ -1,5 +1,6 @@
 package com.mono.music.domain.models
 
+import android.os.Parcelable
 import android.util.Log
 import androidx.room.Embedded
 import androidx.room.Entity

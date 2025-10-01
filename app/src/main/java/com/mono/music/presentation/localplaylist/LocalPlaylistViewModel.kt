@@ -5,8 +5,11 @@ import androidx.annotation.OptIn
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
+import coil.network.HttpException
 import com.google.common.base.Preconditions
 import com.mono.music.PlayerController
+import com.mono.music.data.datastore.PreferenceDataStoreConstants
+import com.mono.music.data.datastore.PreferenceDataStoreHelper
 import com.mono.music.domain.models.Playlist
 import com.mono.music.domain.models.PlaylistAction
 import com.mono.music.domain.models.PlaylistSongCrossRef
@@ -22,10 +25,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okio.IOException
 import javax.inject.Inject
 
 
@@ -33,9 +39,9 @@ import javax.inject.Inject
 class LocalPlaylistViewModel @Inject constructor(
     private val songRepository: SongRepository,
     private val playerController: PlayerController,
-    private val downloadTracker: DownloadTracker
+    private val downloadTracker: DownloadTracker,
+   private val  preferenceDataStoreHelper: PreferenceDataStoreHelper
 ) : ViewModel() {
-
 
     private val _uiState = MutableStateFlow(BaseUIState<PlaylistWithSongs>())
 
@@ -43,22 +49,56 @@ class LocalPlaylistViewModel @Inject constructor(
 
     lateinit var selectedSong: Song
 
-    init {
-
-    }
 
     fun getPlayerController() = playerController
 
     fun getDownloadTracker() = downloadTracker
 
-    fun getPlaylist(id: Long): Flow<PlaylistWithSongs> {
-        return songRepository.getPlaylistWithSongs(id)
-//            .map { playlistWithSongs ->
-//            val sortedSongs = playlistWithSongs.songs.sortedByDescending { song -> song.dateAdded }
-//            PlaylistWithSongs(playlistWithSongs.playlist, sortedSongs)
-//        }
+    fun getPlaylist(id: Long): Flow<PlaylistWithSongs?> {
+//        return songRepository.getPlaylistWithSongs(id)
+
+        return if (id == -1L) {
+            flow {
+                _uiState.update { it.updateToLoading() }
+                try {
+                    val favorites = songRepository.getFavoriteSongs()
+
+                    // Save count to DataStore
+                    preferenceDataStoreHelper.putPreference(
+                        PreferenceDataStoreConstants.FAVORITES_COUNT,
+                        favorites.total ?: 0
+                    )
+
+                    val playlistWithSongs =
+                        PlaylistWithSongs(
+                            playlist = Playlist(
+                                playlistId = -1L,
+                                name = "Favorites",
+                                songsCount = favorites.total ?: 0,
+                            ),
+                            songs = favorites.results.map { it.song }
+                        )
+                    emit(playlistWithSongs)
+                    _uiState.update { it.updateToLoaded(playlistWithSongs) }
+                } catch (e: Exception) {
+                    _uiState.update { it.updateToFailure() }
+                    emit(null)
+                }
+            }
+        } else {
+            flow {
+                val localPlaylist = songRepository.getPlaylistWithSongs(id).first()
+                _uiState.update { it.updateToLoaded(localPlaylist) }
+                emit(localPlaylist)
+
+
+            }
+
+        }
     }
 
+
+    @OptIn(UnstableApi::class)
     fun refreshPlaylist(id: Long) {
         _uiState.update { it.updateToLoading() }
         viewModelScope.launch {
@@ -76,7 +116,6 @@ class LocalPlaylistViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                Log.e("TAG", "refreshPlaylist: " + e.message)
                 _uiState.update { it.updateMessage(e.message) }
             }
         }
@@ -112,6 +151,7 @@ class LocalPlaylistViewModel @Inject constructor(
     }
 
 
+    @OptIn(UnstableApi::class)
     fun addSongToPlaylist(song: Song, playlist: Playlist) {
         _uiState.update { it.updateToPending() }
         viewModelScope.launch {
@@ -233,3 +273,5 @@ class LocalPlaylistViewModel @Inject constructor(
     }
 
 }
+
+

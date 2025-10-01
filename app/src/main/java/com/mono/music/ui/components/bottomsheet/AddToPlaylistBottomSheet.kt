@@ -150,6 +150,7 @@ fun AddToPlaylistBottomSheet(
                     ) {
                         scope.launch{
                             onSelect(playlist, selectedSong)
+                            Log.e("PLAYLIST___", "AddToPlaylistBottomSheet: $playlist", )
                             onDismiss()
                         }
 
@@ -169,7 +170,9 @@ fun AddToPlaylistBottomSheet(
 
 
             CustomButton(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
                 text = R.string.create_new_playlist,
                 onClick = {
                     onCreateNewPlaylist()
@@ -183,7 +186,9 @@ fun AddToPlaylistBottomSheet(
             Spacer(modifier = Modifier.height(10.dp))
 
             CustomButton(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
                 text = R.string.cancel,
                 onClick = onDismiss,
                 containerColor = SurfaceSecond,

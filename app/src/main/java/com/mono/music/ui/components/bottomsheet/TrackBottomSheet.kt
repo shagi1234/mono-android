@@ -54,6 +54,7 @@ fun TrackBottomSheet(
     selectedSong: Song,
     songSettingsSheetState: SheetState,
     onAddToPlaylist: () -> Unit,
+    onAddToFavorites: () -> Unit = {},
     onPlayNext: () -> Unit,
     onNavigateToArtist: () -> Unit,
     onNavigateToAlbum: () -> Unit,
@@ -67,7 +68,7 @@ fun TrackBottomSheet(
         sheetState = songSettingsSheetState,
         dragHandle = {},
         onDismissRequest = onDismiss,
-        ) {
+    ) {
 
 
         Column(
@@ -84,7 +85,8 @@ fun TrackBottomSheet(
                     .weight(1f),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Card(shape = MaterialTheme.shapes.large,
+                Card(
+                    shape = MaterialTheme.shapes.large,
                     modifier = Modifier
                         .width(210.dp)
                         .aspectRatio(1f)
@@ -102,8 +104,8 @@ fun TrackBottomSheet(
                     modifier = Modifier
                         .padding(top = 20.dp)
                         .basicMarquee(
-                        iterations = Int.MAX_VALUE,
-                    ),
+                            iterations = Int.MAX_VALUE,
+                        ),
                     text = selectedSong.name,
                     fontSize = 16.sp,
                     maxLines = 1,
@@ -123,6 +125,17 @@ fun TrackBottomSheet(
                     fontWeight = FontWeight.Normal,
                     color = GrayTextColor
                 )
+            }
+
+
+            ActionsModelView(
+                expandable = true,
+                icon = R.drawable.ic_like,
+                mainText = stringResource(id = R.string.add_to_favorites)
+            ) {
+                onAddToFavorites()
+                onDismiss()
+
             }
 
             ActionsModelView(
@@ -156,7 +169,7 @@ fun TrackBottomSheet(
             }
 
 
-            if (selectedSong.albumId != null ){
+            if (selectedSong.albumId != null) {
                 ActionsModelView(
                     expandable = true,
                     icon = R.drawable.album,
@@ -167,7 +180,7 @@ fun TrackBottomSheet(
                 }
             }
 
-            if (deletable){
+            if (deletable) {
                 ActionsModelView(
                     expandable = false,
                     icon = R.drawable.ic_trash,
@@ -188,7 +201,10 @@ fun TrackBottomSheet(
             }
 
             CustomButton(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .padding(top = 12.dp),
                 text = R.string.cancel,
                 onClick = onDismiss,
                 containerColor = SurfaceSecond,

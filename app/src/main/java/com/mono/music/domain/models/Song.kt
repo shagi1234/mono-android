@@ -18,6 +18,7 @@ import com.mono.music.player.PlayerStates
 import java.lang.Exception
 import java.util.Date
 import javax.annotation.concurrent.Immutable
+import androidx.core.net.toUri
 
 @Entity
 @Immutable
@@ -89,7 +90,7 @@ data class Song(
     @UnstableApi
     fun toMediaItem(): MediaItem {
         val mediaMetaData = MediaMetadata.Builder()
-            .setArtworkUri(Uri.parse(getSongImage()))
+            .setArtworkUri(getSongImage().toUri())
             .setTitle(name)
             .setDescription(getArtistsName())
             .setAlbumArtist(getArtistsName())
@@ -97,7 +98,7 @@ data class Song(
             .setDurationMs(duration)
             .build()
 
-        val trackUri = Uri.parse(getSongUrl())
+        val trackUri = getSongUrl().toUri()
         return MediaItem.Builder()
             .setUri(trackUri)
             .setMediaId(songId.toString())

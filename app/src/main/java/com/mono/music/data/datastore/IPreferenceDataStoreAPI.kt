@@ -27,10 +27,9 @@ object PreferenceDataStoreConstants {
     val FIRST_TIME_KEY = stringPreferencesKey("FIRST_TIME")
     val BIRTDAY_KEY = stringPreferencesKey("BIRTDAY")
     val GENDER_KEY = stringPreferencesKey("GENDER")
-    val LANGUAGE_KEY = stringPreferencesKey("LANGUAGE")
 
     val REGISTER_COMPLETED_KEY = booleanPreferencesKey("REGISTER_COMPLETED_KEY")
     val PLAN_SELECTED_KEY = booleanPreferencesKey("PLAN_SELECTED_KEY")
-    val SELECTED_TRACK_KEY = stringPreferencesKey("SELECTED_TRACK_KEY")
+    val FAVORITES_COUNT = intPreferencesKey("FAVORITES_COUNT")
 
 }

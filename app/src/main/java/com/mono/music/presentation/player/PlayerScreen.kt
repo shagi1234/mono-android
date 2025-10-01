@@ -43,6 +43,7 @@ import com.mono.music.PlayerController
 import com.mono.music.R
 import com.mono.music.di.DataModule
 import com.mono.music.domain.models.Artist
+import com.mono.music.domain.models.Playlist
 import com.mono.music.player.PlayerStates
 import com.mono.music.player.components.PlayerTopAppBar
 import com.mono.music.presentation.playlist.PlaylistViewModel
@@ -65,8 +66,9 @@ import kotlinx.coroutines.launch
 fun PlayerScreen(
     mainViewModel: MainViewModel,
     playerController: PlayerController,
-    isFullScreenVisible: Boolean,
     playerBottomSheet: SheetState,
+
+    isFullScreenVisible: Boolean,
     navigateToArtist: (Artist) -> Unit,
     navigateToAlbum: (Long) -> Unit,
     navigateToPlaylist: (Long) -> Unit,
@@ -99,6 +101,7 @@ fun PlayerScreen(
     var addToPlaylistClicked by rememberSaveable {
         mutableStateOf(false)
     }
+
     var showPlaylistBottomSheet by rememberSaveable {
         mutableStateOf(false)
     }
@@ -114,10 +117,23 @@ fun PlayerScreen(
         playerController.selectedTrack?.songId
     ).collectAsState(initial = false)
 
+
+    val likeState by mainViewModel.likeStates.collectAsState()
+    val liked = playerController.selectedTrack?.songId?.let { likeState[it] } ?: false
+
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val addToQueueMessage = stringResource(id = R.string.successfully_added)
+
     LaunchedEffect(playerController.selectedTrack) {
         if (playerController.selectedTrack != null) {
             songExists = true
         }
+    }
+
+    LaunchedEffect(liked) {
+        if (liked)
+            snackbarHostState.showSnackbar(snackbarMessage)
     }
 
     val dominantColor = remember { Animatable(Color.Black) }
@@ -140,8 +156,7 @@ fun PlayerScreen(
         }
     }
 
-    val snackbarHostState = remember { SnackbarHostState() }
-    val addToQueueMessage = stringResource(id = R.string.successfully_added)
+
 
     Scaffold(
         snackbarHost = {
@@ -211,7 +226,15 @@ fun PlayerScreen(
                     navigateToArtist,
                     onShowArtistDialog = { showArtistDialog = true },
                     onAddToPlaylistClick = { addToPlaylistClicked = true },
-                    isInPlaylist = isInPlaylist
+                    onAddFavoritesClick = {
+                        mainViewModel.likeSong(
+                            songId = playerController.selectedTrack?.songId ?: 0
+                        )
+
+
+                    },
+                    isInPlaylist = isInPlaylist,
+                    liked = liked
                 )
                 Spacer(modifier = Modifier.height(20.dp))
                 PlaybackControls(
@@ -299,7 +322,6 @@ fun PlayerScreen(
             onSelect = { playlist, song ->
                 playerController.selectedTrack?.let {
                     mainViewModel.addSongToPlaylist(it, playlist)
-
                 }
             }) {
             scope.launch {

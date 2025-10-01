@@ -1,15 +1,16 @@
 package com.mono.music
 
-
-
-
 import android.util.Log
+import androidx.annotation.OptIn
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.media3.common.util.UnstableApi
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.mono.music.data.datastore.PreferenceDataStoreConstants
+import com.mono.music.data.datastore.PreferenceDataStoreConstants.ACCESS_TOKEN_KEY
 import com.mono.music.data.datastore.PreferenceDataStoreConstants.BIRTDAY_KEY
+import com.mono.music.data.datastore.PreferenceDataStoreConstants.FAVORITES_COUNT
 import com.mono.music.data.datastore.PreferenceDataStoreConstants.FIRST_TIME_KEY
 import com.mono.music.data.datastore.PreferenceDataStoreConstants.LOGGED_IN_KEY
 import com.mono.music.data.datastore.PreferenceDataStoreConstants.NAME_KEY
@@ -55,7 +56,10 @@ class MainViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(BaseUIState<Any>())
     val uiState: StateFlow<BaseUIState<Any>> = _uiState.asStateFlow()
 
+
+
     val validUntil = preferenceDataStoreHelper.getPreference(VALID_UNTIL_KEY, "")
+    val token = preferenceDataStoreHelper.getPreference(ACCESS_TOKEN_KEY, "")
     val planSelected = preferenceDataStoreHelper.getPreference(PLAN_SELECTED_KEY, false)
     val isFirstTime = preferenceDataStoreHelper.getPreference(FIRST_TIME_KEY, "")
     val isRegisterCompleted = preferenceDataStoreHelper.getPreference(REGISTER_COMPLETED_KEY, false)
@@ -66,6 +70,8 @@ class MainViewModel @Inject constructor(
 
     init {
         getUserData()
+
+        Log.e("TOKEN", ": $token")
     }
 
     fun getPlayerController() = playerController
@@ -74,7 +80,69 @@ class MainViewModel @Inject constructor(
         return songRepository.getLocalPlaylists()
     }
 
+    suspend fun increaseFavoritesCount() {
+        val currentCount = preferenceDataStoreHelper.getFirstPreference(
+            PreferenceDataStoreConstants.FAVORITES_COUNT,
+            0
+        )
+        preferenceDataStoreHelper.putPreference(
+            PreferenceDataStoreConstants.FAVORITES_COUNT,
+            currentCount + 1
+        )
+    }
 
+    suspend fun decreaseFavoritesCount() {
+        val currentCount = preferenceDataStoreHelper.getFirstPreference(
+            PreferenceDataStoreConstants.FAVORITES_COUNT,
+            0
+        )
+        if (currentCount > 0) {
+            preferenceDataStoreHelper.putPreference(
+                PreferenceDataStoreConstants.FAVORITES_COUNT,
+                currentCount - 1
+            )
+        }
+    }
+//    private val _likeState = MutableStateFlow(false)
+//    val likeState  =  _likeState
+
+    private val _likeState = MutableStateFlow<Map<Long, Boolean>>(emptyMap())
+    val likeStates = _likeState.asStateFlow()
+
+
+//    fun getLikeState(songId: Long): Boolean {
+//        return _likeState.value[songId] ?: false
+//    }
+
+
+
+    fun likeSong(songId: Long) {
+        viewModelScope.launch {
+            try {
+                val result = songRepository.likeSong(songId)
+                val isLiked = result.liked ?: false
+                increaseFavoritesCount()
+                _likeState.value = _likeState.value.toMutableMap().apply {
+                    put(songId, isLiked)
+                }
+            } catch (e: Exception) {
+                Log.e("LIKEEE", "likeSong: ${e.message}", )
+                _likeState.value = _likeState.value.toMutableMap().apply {
+                    put(songId, false)
+                }
+            }
+        }
+    }
+//    fun likeSong(songId: Long) {
+//        viewModelScope.launch {
+//            try {
+////                songRepository.likeSong(songId)
+//                _likeState.value = songRepository.likeSong(songId).liked?:false
+//            } catch (e: Exception) {
+//                _likeState.value = false
+//            }
+//        }
+//    }
 
     fun addNewPlaylist(name:String){
         _uiState.update { it.updateToPending() }
@@ -104,6 +172,8 @@ class MainViewModel @Inject constructor(
     }
 
 
+
+    @OptIn(UnstableApi::class)
     fun addSongToPlaylist(song: Song, playlist: Playlist){
         _uiState.update { it.updateToPending() }
         viewModelScope.launch {
@@ -143,7 +213,10 @@ class MainViewModel @Inject constructor(
         }
     }
 
+
+
     fun getFreePlan() {
+
         _uiState.update { it.updateToPending() }
         viewModelScope.launch {
             try {
@@ -185,7 +258,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    suspend fun saveUserData(user: User){
+    private suspend fun saveUserData(user: User){
         preferenceDataStoreHelper.putPreference(PHONE_KEY, "+993"+user.phone)
         preferenceDataStoreHelper.putPreference(NAME_KEY, user.name)
         preferenceDataStoreHelper.putPreference(PHONE_KEY, user.phone)

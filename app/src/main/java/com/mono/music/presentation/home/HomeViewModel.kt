@@ -125,7 +125,6 @@ class HomeViewModel @Inject constructor(
                     songRepository.insertPlaylist(Playlist(name = name, playlistId = res.playlistId))
                 }
                 _uiState.update { it.updateToDefault() }
-
             } catch (e: Exception) {
                 _uiState.update { it.updateMessage(e.message) }
             }

@@ -81,6 +81,7 @@ fun AppNavGraph(
     var isNowPlayingScreenVisible by remember { mutableStateOf(false) }
 
     val loggedIn by mainViewModel.isLoggedIn.collectAsState(initial = null)
+    val token by mainViewModel.token.collectAsState(initial = null)
     val validUntil by mainViewModel.validUntil.collectAsState(initial = null)
     val isFirstTime by mainViewModel.isFirstTime.collectAsState(initial = null)
     val isRegisterCompleted by mainViewModel.isRegisterCompleted.collectAsState(initial = null)
@@ -121,8 +122,6 @@ fun AppNavGraph(
     )
 
     val snackbarHostState = remember { SnackbarHostState() }
-
-
 
     LaunchedEffect(loggedIn) {
         if (loggedIn == true) {

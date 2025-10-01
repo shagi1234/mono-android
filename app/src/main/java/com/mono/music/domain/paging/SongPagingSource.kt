@@ -31,8 +31,6 @@ class SongPagingSource(
                 page = nextPageNumber, artistId = artistId, isTop = isTop, isSingle = isSingle
             )
 
-
-
             return LoadResult.Page(
                 data = response.results, prevKey = null, nextKey = response.next
             )

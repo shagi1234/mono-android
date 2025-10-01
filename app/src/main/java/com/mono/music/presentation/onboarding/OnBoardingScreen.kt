@@ -43,7 +43,6 @@ import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import com.ramcosta.composedestinations.navigation.navigate
 
-
 @LoginNavGraph(start = true)
 @Destination
 @Composable
@@ -110,31 +109,6 @@ fun OnBoardingScreen(
                 navigator?.navigate(LoginScreenDestination)
             }
 
-//            Button(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .padding(top = 20.dp),
-//                shape = MaterialTheme.shapes.small,
-//                onClick = {
-//                    navigator?.navigate(LoginScreenDestination)
-//                },
-//                contentPadding = PaddingValues(all = 16.dp),
-//                colors = ButtonColors(
-//                    containerColor = Yellow,
-//                    contentColor = AlbumCoverBlackBG,
-//                    disabledContentColor = AlbumCoverBlackBG,
-//                    disabledContainerColor = Yellow,
-//                )
-//            ) {
-//                Text(
-//                    text = stringResource(id = R.string.connect_service),
-//                    color = AlbumCoverBlackBG,
-//                    fontWeight = FontWeight.Bold,
-//                    fontSize = 16.sp,
-//                    fontFamily = SFFontFamily
-//                )
-//
-//            }
         }
     }
 

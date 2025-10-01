@@ -1,5 +1,6 @@
 package com.mono.music.presentation.localplaylist
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -45,8 +46,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.mono.music.MainActivity
 import com.mono.music.R
 import com.mono.music.di.DataModule
+import com.mono.music.domain.models.Playlist
+import com.mono.music.domain.models.PlaylistWithSongs
+import com.mono.music.domain.models.Song
 import com.mono.music.presentation.destinations.ArtistScreenDestination
 import com.mono.music.presentation.destinations.PlaylistScreenDestination
+import com.mono.music.presentation.myplaylist.MyPlaylistsViewModel
 import com.mono.music.presentation.player.NewPlaylistDialog
 import com.mono.music.presentation.playlist.PlaylistButtonsRow
 import com.mono.music.ui.CollapsibleScaffold
@@ -62,6 +67,7 @@ import com.mono.music.ui.theme.Background
 import com.mono.music.ui.theme.Inactive
 import com.mono.music.ui.theme.TransparentColor
 import com.mono.music.ui.theme.WhiteTextColor
+import com.mono.music.ui.utils.BaseUIState
 import com.mono.music.ui.utils.ScreenTransition
 import com.mono.music.ui.utils.ShareUtils
 import com.ramcosta.composedestinations.annotation.Destination
@@ -74,21 +80,23 @@ import kotlinx.coroutines.launch
 @Destination(style = ScreenTransition::class)
 fun LocalPlaylistScreen(
     id: Long,
-    navigator: DestinationsNavigator
+    navigator: DestinationsNavigator,
 ) {
-
     val context = LocalContext.current
 
     val localPlaylistViewModel = hiltViewModel<LocalPlaylistViewModel>()
 
-    val playlist by localPlaylistViewModel.getPlaylist(id).collectAsState(initial = null)
+//    val playlist by localPlaylistViewModel.getPlaylist(id).collectAsState(initial = null)
 
     val uiState by localPlaylistViewModel.uiState.collectAsState()
+
+    val playlist by remember(id) {
+        localPlaylistViewModel.getPlaylist(id)
+    }.collectAsState(initial = null)
 
     var settingsClicked by remember {
         mutableStateOf(false)
     }
-
     var addToPlaylistClicked by rememberSaveable {
         mutableStateOf(false)
     }
@@ -103,9 +111,11 @@ fun LocalPlaylistScreen(
         mutableStateOf(false)
     }
 
-    LaunchedEffect(Unit) {
-        localPlaylistViewModel.refreshPlaylist(id)
+
+    var showLoading by rememberSaveable {
+        mutableStateOf(false)
     }
+
 
     val playlistSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -115,7 +125,6 @@ fun LocalPlaylistScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val snackbarMessage = stringResource(id = R.string.successfully_added)
     val addToQueueMessage = stringResource(id = R.string.successfully_added)
 
     val downloadIcon =
@@ -125,6 +134,21 @@ fun LocalPlaylistScreen(
 
     val configuration = LocalConfiguration.current
     val screenWidth = (configuration.screenWidthDp * 1.1).dp
+    LaunchedEffect(Unit) {
+        if (id != -1L)
+            localPlaylistViewModel.refreshPlaylist(id)
+    }
+
+
+
+    LaunchedEffect(uiState.isLoading) {
+        showLoading = uiState.isLoading
+//        Log.d(
+//            "DEBUG",
+//            "uiState changed: isPending=${uiState.isPending}, isLoaded=${uiState.isSuccess}, isFailure=${uiState.isFailure}"
+//        )
+    }
+
 
 
     LaunchedEffect(uiState.message) {
@@ -238,6 +262,8 @@ fun LocalPlaylistScreen(
                         downloadIcon = downloadIcon,
                         onPlay = {
                             playlist?.songs?.let { data ->
+
+                                Log.e("SONGSSSS___", "LocalPlaylistScreen: $data", )
                                 if (data.isNotEmpty()) {
                                     localPlaylistViewModel.getPlayerController().init(data[0], data)
                                 }
@@ -261,7 +287,6 @@ fun LocalPlaylistScreen(
                             }
                         })
                 }
-
                 playlist?.songs?.let { data ->
                     itemsIndexed(data) { index, song ->
                         SwipeableSongView(
@@ -385,6 +410,17 @@ fun LocalPlaylistScreen(
                 )
             }
 
+            if (showLoading){
+                Dialog(
+                    onDismissRequest = { },
+                ) {
+                    LoadingView(
+                        Modifier.fillMaxSize()
+                    )
+                }
+            }
+
+
             if (uiState.isPending) {
                 Dialog(
                     onDismissRequest = { },
@@ -394,6 +430,7 @@ fun LocalPlaylistScreen(
                     )
                 }
             }
+
 
         }
 

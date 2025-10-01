@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -22,6 +23,7 @@ import com.mono.music.PlayerController
 import com.mono.music.R
 import com.mono.music.domain.models.Artist
 import com.mono.music.ui.theme.SFFontFamily
+import com.mono.music.ui.theme.SurfaceSecond
 import com.mono.music.ui.theme.WhiteTextColor
 import com.mono.music.ui.theme.Yellow
 import com.mono.music.ui.utils.clickWithoutIndication
@@ -33,7 +35,9 @@ fun MediaInfo(
     navigateToArtist: (Artist) -> Unit,
     onShowArtistDialog: () -> Unit,
     onAddToPlaylistClick: () -> Unit,
-    isInPlaylist: Boolean = false
+    onAddFavoritesClick: () -> Unit = {},
+    isInPlaylist: Boolean = false,
+    liked: Boolean = false
 ) {
 
     Row(
@@ -83,9 +87,24 @@ fun MediaInfo(
                 color = WhiteTextColor
             )
         }
+
+
+        val likeIconTint = if (liked) Yellow else WhiteTextColor
+        IconButton(
+            modifier = Modifier.scaleIconClickable { onAddFavoritesClick() }, onClick = {
+            }) {
+            Icon(
+                modifier = Modifier.size(24.dp),
+                painter = painterResource(
+                    R.drawable.ic_like
+                ),
+                tint = likeIconTint,
+                contentDescription = null
+            )
+        }
         IconButton(
             modifier = Modifier.scaleIconClickable { onAddToPlaylistClick() }, onClick = {
-        }) {
+            }) {
             Icon(
                 modifier = Modifier.size(24.dp),
                 tint = if (isInPlaylist) {
