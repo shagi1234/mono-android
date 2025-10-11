@@ -1,13 +1,16 @@
 package com.mono.music.presentation.localplaylist
 
+import android.app.Application
 import android.util.Log
 import androidx.annotation.OptIn
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
 import coil.network.HttpException
 import com.google.common.base.Preconditions
 import com.mono.music.PlayerController
+import com.mono.music.R
 import com.mono.music.data.datastore.PreferenceDataStoreConstants
 import com.mono.music.data.datastore.PreferenceDataStoreHelper
 import com.mono.music.domain.models.Playlist
@@ -37,6 +40,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LocalPlaylistViewModel @Inject constructor(
+    private val application: Application,
     private val songRepository: SongRepository,
     private val playerController: PlayerController,
     private val downloadTracker: DownloadTracker,
@@ -75,7 +79,7 @@ class LocalPlaylistViewModel @Inject constructor(
                         PlaylistWithSongs(
                             playlist = Playlist(
                                 playlistId = -1L,
-                                name = "Favorites",
+                                name =  application.getString(R.string.favorites),
                                 songsCount = favorites.total ?: 0,
                             ),
                             songs = favoriteSongs

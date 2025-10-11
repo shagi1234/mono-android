@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -73,16 +75,15 @@ fun TrackBottomSheet(
 
         Column(
             modifier = Modifier
-                .fillMaxSize()
                 .padding(vertical = 20.dp)
+                .verticalScroll(rememberScrollState())
         ) {
 
 
             Column(
                 modifier = Modifier
                     .padding(top = 45.dp, start = 20.dp, end = 20.dp)
-                    .fillMaxWidth()
-                    .weight(1f),
+                    .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Card(
@@ -94,7 +95,7 @@ fun TrackBottomSheet(
                     Image(
                         modifier = Modifier.fillMaxSize(),
                         painter = rememberAsyncImagePainter(
-                            model = selectedSong.getSongImage() ?: ""
+                            model = selectedSong.getSongImage()
                         ),
                         contentDescription = "",
                         contentScale = ContentScale.Crop,

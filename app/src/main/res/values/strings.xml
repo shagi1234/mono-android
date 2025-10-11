@@ -88,9 +88,6 @@
     <string name="no_playlists_saved_yet">Pleýlist ýok</string>
     <string name="vpn_usage_message">Eger-de siz VPN ýa-da proxy ulanýan bolsaňyz, olary öçürmekligi maslahat berýäris. Biziň programmamyz beýleki hyzmatlar bilen işlänok.</string>
     <string name="error">Näsazlyk ýüze çykdy!</string>
-    <string name="update_available">Täze wersiýa çykdy!!!</string>
-    <string name="update">Ýükläp al!!!</string>
-    <string name="update_available_message">Mono Music elmydama kämilleşýär we has-da gowlaşýar. Täze wersiýany ýüklap alyn we baha beriň!!!</string>
     <string name="noConnection">Näsazlyk ýüze çykdy</string>
     <string name="enjoy_music">Reklamasyz aýdymlardan lezzet alyň!</string>
     <string name="downloads">Ýüklenenler</string>
@@ -145,12 +142,17 @@
     <string name="more_artists">Beýleki Aýdymçylar</string>
     <string name="confirm">Tassykla</string>
 
+    <string name="select_your_birthday">Select your birthday</string>
+
+
     <string name="finish_register">Registrasiýany tamamla</string>
     <string name="finish_register_desc">Ýörite teklipleri taýynlamak üçin goşmaça maglumatlaryňyzy giriziň</string>
-    <string name="select_your_birthday">Select your birthday</string>
     <string name="reconnect">Täzeden baglan</string>
+    <string name="update">Ýükläp al!!!</string>
+    <string name="update_available">Täze wersiýa çykdy!!!</string>
+    <string name="update_available_message">Mono Music elmydama kämilleşýär we has-da gowlaşýar. Täze wersiýany ýüklap alyn we baha beriň!!!</string>
     <string name="add_to_favorites">Halanlaryma goş</string>
-
+    <string name="favorites">Halanlarym</string>
 
 
 </resources>

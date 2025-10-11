@@ -145,14 +145,17 @@
     <string name="more_artists">More Artists</string>
     <string name="confirm">Confirm</string>
 
-    <string name="update_available">Täze wersiýa çykdy!!!</string>
-    <string name="update">Ýükläp al!!!</string>
-    <string name="update_available_message">Mono Music elmydama kämilleşýär we has-da gowlaşýar. Täze wersiýany ýüklap alyn we baha beriň!!!</string>
-
-    <string name="finish_register">Registrasiýany tamamla</string>
-    <string name="finish_register_desc">Ýörite teklipleri taýynlamak üçin goşmaça maglumatlaryňyzy giriziň</string>
     <string name="select_your_birthday">Select your birthday</string>
-    <string name="reconnect">Täzeden baglan</string>
 
+
+
+    <string name="finish_register">Complete Registration</string>
+    <string name="finish_register_desc">Enter additional information to customize your recommendations</string>
+    <string name="reconnect">Reconnect</string>
+    <string name="update">Download Now!!!</string>
+    <string name="update_available">New Version Available!!!</string>
+    <string name="update_available_message">Mono Music is constantly improving and getting better. Download the new version and rate it!!!</string>
+    <string name="add_to_favorites">Add to Favorites</string>
+    <string name="favorites">Favorites</string>
 
 </resources>
