@@ -1,6 +1,7 @@
 package com.mono.music.presentation.player
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.animation.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -67,7 +68,6 @@ fun PlayerScreen(
     mainViewModel: MainViewModel,
     playerController: PlayerController,
     playerBottomSheet: SheetState,
-
     isFullScreenVisible: Boolean,
     navigateToArtist: (Artist) -> Unit,
     navigateToAlbum: (Long) -> Unit,
@@ -117,25 +117,22 @@ fun PlayerScreen(
         playerController.selectedTrack?.songId
     ).collectAsState(initial = false)
 
-
     val likeState by mainViewModel.likeStates.collectAsState()
-    val liked = playerController.selectedTrack?.songId?.let { likeState[it] } ?: false
-
+    val liked = playerController.selectedTrack?.songId?.let { songId ->
+        // Check MainViewModel state first, fallback to playerController's isLiked
+        likeState[songId] ?: playerController.selectedTrack?.isLiked ?: false
+    } ?: false
 
     val snackbarHostState = remember { SnackbarHostState() }
+
     val addToQueueMessage = stringResource(id = R.string.successfully_added)
+
 
     LaunchedEffect(playerController.selectedTrack) {
         if (playerController.selectedTrack != null) {
             songExists = true
         }
     }
-
-    LaunchedEffect(liked) {
-        if (liked)
-            snackbarHostState.showSnackbar(snackbarMessage)
-    }
-
     val dominantColor = remember { Animatable(Color.Black) }
 
     LaunchedEffect(playerController.selectedTrack?.image) {
@@ -221,6 +218,8 @@ fun PlayerScreen(
                     .padding(horizontal = 20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+
+
                 MediaInfo(
                     playerController,
                     navigateToArtist,
@@ -228,7 +227,8 @@ fun PlayerScreen(
                     onAddToPlaylistClick = { addToPlaylistClicked = true },
                     onAddFavoritesClick = {
                         mainViewModel.likeSong(
-                            songId = playerController.selectedTrack?.songId ?: 0
+                            songId = playerController.selectedTrack?.songId ?: 0,
+                            liked = liked
                         )
 
 

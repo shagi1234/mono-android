@@ -16,5 +16,6 @@ data class PlaylistAction(
 }
 
 data class RequestLikeSong(
-    val song: Long
+    val song: Long,
+    val action: String?
 )

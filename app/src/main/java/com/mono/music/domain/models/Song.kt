@@ -29,7 +29,6 @@ data class Song(
     val artists: List<Artist> = emptyList(),
     val image: String = "",
     val likes: Int = 0,
-    val isLiked: Boolean = false,
     val duration: Long = 0L,
     @SerializedName("album_id")
     val albumId: Long? = null,
@@ -37,6 +36,8 @@ data class Song(
     val albumName: String? = "",
     @SerializedName("album_year")
     val albumYear: Long? = 1999,
+    @SerializedName("is_liked")
+    val isLiked: Boolean? = false,
     val year: Long = 1999,
     val audio: String = "",
     var dateAdded: Long = 0,
@@ -61,10 +62,10 @@ data class Song(
 
     fun getSongUrl(): String {
         var hslUrl = audio
-        try{
+        try {
             hslUrl = audio.removeSuffix(".mp3") + ".m3u8"
-        }catch (e:Exception){
-            Log.e("TAG", "getSongUrl: "+e.message )
+        } catch (e: Exception) {
+            Log.e("TAG", "getSongUrl: " + e.message)
         }
 
         return hslUrl

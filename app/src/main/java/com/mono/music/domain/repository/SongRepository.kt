@@ -210,8 +210,9 @@ class SongRepository @Inject constructor(
 
 
 
-    suspend fun likeSong(songId:Long):Message{
-        val requestBody = RequestLikeSong(songId)
+    suspend fun likeSong(songId:Long, liked: Boolean):Message{
+        val action = if (liked)   "unlike" else "like"
+        val requestBody = RequestLikeSong(songId, action)
         return  apiService.likeSong(requestBody)
     }
 

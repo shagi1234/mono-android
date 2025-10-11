@@ -40,7 +40,7 @@ class LocalPlaylistViewModel @Inject constructor(
     private val songRepository: SongRepository,
     private val playerController: PlayerController,
     private val downloadTracker: DownloadTracker,
-   private val  preferenceDataStoreHelper: PreferenceDataStoreHelper
+    private val preferenceDataStoreHelper: PreferenceDataStoreHelper
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(BaseUIState<PlaylistWithSongs>())
@@ -68,7 +68,9 @@ class LocalPlaylistViewModel @Inject constructor(
                         PreferenceDataStoreConstants.FAVORITES_COUNT,
                         favorites.total ?: 0
                     )
-
+                    val favoriteSongs = favorites.results.map { favoriteResponse ->
+                        favoriteResponse.song.copy(isLiked = true)
+                    }
                     val playlistWithSongs =
                         PlaylistWithSongs(
                             playlist = Playlist(
@@ -76,7 +78,7 @@ class LocalPlaylistViewModel @Inject constructor(
                                 name = "Favorites",
                                 songsCount = favorites.total ?: 0,
                             ),
-                            songs = favorites.results.map { it.song }
+                            songs = favoriteSongs
                         )
                     emit(playlistWithSongs)
                     _uiState.update { it.updateToLoaded(playlistWithSongs) }

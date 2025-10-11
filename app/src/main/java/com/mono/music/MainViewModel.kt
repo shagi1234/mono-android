@@ -10,7 +10,6 @@ import com.google.gson.reflect.TypeToken
 import com.mono.music.data.datastore.PreferenceDataStoreConstants
 import com.mono.music.data.datastore.PreferenceDataStoreConstants.ACCESS_TOKEN_KEY
 import com.mono.music.data.datastore.PreferenceDataStoreConstants.BIRTDAY_KEY
-import com.mono.music.data.datastore.PreferenceDataStoreConstants.FAVORITES_COUNT
 import com.mono.music.data.datastore.PreferenceDataStoreConstants.FIRST_TIME_KEY
 import com.mono.music.data.datastore.PreferenceDataStoreConstants.LOGGED_IN_KEY
 import com.mono.music.data.datastore.PreferenceDataStoreConstants.NAME_KEY
@@ -39,7 +38,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import java.time.LocalDate
@@ -55,7 +53,6 @@ class MainViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(BaseUIState<Any>())
     val uiState: StateFlow<BaseUIState<Any>> = _uiState.asStateFlow()
-
 
 
     val validUntil = preferenceDataStoreHelper.getPreference(VALID_UNTIL_KEY, "")
@@ -80,71 +77,29 @@ class MainViewModel @Inject constructor(
         return songRepository.getLocalPlaylists()
     }
 
-    suspend fun increaseFavoritesCount() {
-        val currentCount = preferenceDataStoreHelper.getFirstPreference(
-            PreferenceDataStoreConstants.FAVORITES_COUNT,
-            0
-        )
-        preferenceDataStoreHelper.putPreference(
-            PreferenceDataStoreConstants.FAVORITES_COUNT,
-            currentCount + 1
-        )
-    }
-
-    suspend fun decreaseFavoritesCount() {
-        val currentCount = preferenceDataStoreHelper.getFirstPreference(
-            PreferenceDataStoreConstants.FAVORITES_COUNT,
-            0
-        )
-        if (currentCount > 0) {
-            preferenceDataStoreHelper.putPreference(
-                PreferenceDataStoreConstants.FAVORITES_COUNT,
-                currentCount - 1
-            )
-        }
-    }
-//    private val _likeState = MutableStateFlow(false)
-//    val likeState  =  _likeState
-
     private val _likeState = MutableStateFlow<Map<Long, Boolean>>(emptyMap())
     val likeStates = _likeState.asStateFlow()
 
 
-//    fun getLikeState(songId: Long): Boolean {
-//        return _likeState.value[songId] ?: false
-//    }
-
-
-
-    fun likeSong(songId: Long) {
+    fun likeSong(songId: Long, liked: Boolean) {
         viewModelScope.launch {
             try {
-                val result = songRepository.likeSong(songId)
+                val result = songRepository.likeSong(songId, liked)
                 val isLiked = result.liked ?: false
-                increaseFavoritesCount()
+
                 _likeState.value = _likeState.value.toMutableMap().apply {
                     put(songId, isLiked)
                 }
+
             } catch (e: Exception) {
-                Log.e("LIKEEE", "likeSong: ${e.message}", )
                 _likeState.value = _likeState.value.toMutableMap().apply {
                     put(songId, false)
                 }
             }
         }
     }
-//    fun likeSong(songId: Long) {
-//        viewModelScope.launch {
-//            try {
-////                songRepository.likeSong(songId)
-//                _likeState.value = songRepository.likeSong(songId).liked?:false
-//            } catch (e: Exception) {
-//                _likeState.value = false
-//            }
-//        }
-//    }
 
-    fun addNewPlaylist(name:String){
+    fun addNewPlaylist(name: String) {
         _uiState.update { it.updateToPending() }
         viewModelScope.launch {
             try {
@@ -172,9 +127,8 @@ class MainViewModel @Inject constructor(
     }
 
 
-
     @OptIn(UnstableApi::class)
-    fun addSongToPlaylist(song: Song, playlist: Playlist){
+    fun addSongToPlaylist(song: Song, playlist: Playlist) {
         _uiState.update { it.updateToPending() }
         viewModelScope.launch {
             try {
@@ -208,11 +162,10 @@ class MainViewModel @Inject constructor(
                 val res = userRepository.getProfile()
                 saveUserData(res)
             } catch (e: Exception) {
-                Log.e("TAG", "getUserData: "+e.message )
+                Log.e("TAG", "getUserData: " + e.message)
             }
         }
     }
-
 
 
     fun getFreePlan() {
@@ -221,36 +174,37 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val res = userRepository.getFreePlan()
-                option.update {res}
+                option.update { res }
                 _uiState.update { it.updateToDefault() }
             } catch (e: Exception) {
-                Log.e("TAG", "getUserData: "+e.message )
+                Log.e("TAG", "getUserData: " + e.message)
             }
         }
     }
 
-    fun subscribeToFreePlan( option: Option) {
+    fun subscribeToFreePlan(option: Option) {
         _uiState.update { it.updateToPending() }
         viewModelScope.launch {
             try {
                 val res = userRepository.subscribeToFreePlan()
-                if (res.isSuccessful){
+                if (res.isSuccessful) {
                     updateValidUntil(option)
                     _uiState.update { it.updateToDefault() }
-                }else{
+                } else {
                     val gson = Gson()
                     val type = object : TypeToken<Message>() {}.type
-                    var errorResponse: Message? = gson.fromJson(res.errorBody()!!.charStream(), type)
-                    _uiState.update { it.updateMessage(errorResponse?.message?: "Error") }
+                    var errorResponse: Message? =
+                        gson.fromJson(res.errorBody()!!.charStream(), type)
+                    _uiState.update { it.updateMessage(errorResponse?.message ?: "Error") }
                 }
             } catch (e: Exception) {
                 _uiState.update { it.updateMessage(e.message) }
-                Log.e("TAG", "getUserData: "+e.message )
+                Log.e("TAG", "getUserData: " + e.message)
             }
         }
     }
 
-    fun updateValidUntil(option: Option ) {
+    fun updateValidUntil(option: Option) {
         val currentDate = LocalDate.now()
         val newDate = currentDate.plusDays(option.days)
         viewModelScope.launch {
@@ -258,8 +212,8 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private suspend fun saveUserData(user: User){
-        preferenceDataStoreHelper.putPreference(PHONE_KEY, "+993"+user.phone)
+    private suspend fun saveUserData(user: User) {
+        preferenceDataStoreHelper.putPreference(PHONE_KEY, "+993" + user.phone)
         preferenceDataStoreHelper.putPreference(NAME_KEY, user.name)
         preferenceDataStoreHelper.putPreference(PHONE_KEY, user.phone)
         preferenceDataStoreHelper.putPreference(BIRTDAY_KEY, user.birthday)
@@ -272,7 +226,7 @@ class MainViewModel @Inject constructor(
         _uiState.update { it.updateToDefault() }
     }
 
-    fun checkIsValid(validUntil:String): Boolean {
+    fun checkIsValid(validUntil: String): Boolean {
 
         if (validUntil == "") return false
         val currentDate = LocalDate.now()
