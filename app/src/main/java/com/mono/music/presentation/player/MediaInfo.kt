@@ -90,14 +90,14 @@ fun MediaInfo(
 
 
         val likeIconTint = if (liked) Yellow else WhiteTextColor
+        val likeIcon =
+            if (liked) painterResource(R.drawable.ic_heart_filled) else painterResource(R.drawable.ic_like)
         IconButton(
             modifier = Modifier.scaleIconClickable { onAddFavoritesClick() }, onClick = {
             }) {
             Icon(
                 modifier = Modifier.size(24.dp),
-                painter = painterResource(
-                    R.drawable.ic_like
-                ),
+                painter = likeIcon,
                 tint = likeIconTint,
                 contentDescription = null
             )

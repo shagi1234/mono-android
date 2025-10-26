@@ -28,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -124,11 +125,6 @@ fun PlayerScreen(
 
     val addToQueueMessage = stringResource(id = R.string.successfully_added)
 
-    LaunchedEffect(playerController.selectedTrack) {
-        if (playerController.selectedTrack != null) {
-            songExists = true
-        }
-    }
     val dominantColor = remember { Animatable(Color.Black) }
 
     LaunchedEffect(playerController.selectedTrack?.image) {
@@ -148,6 +144,17 @@ fun PlayerScreen(
         }
     }
 
+
+    LaunchedEffect(mainViewModel.uiState) {
+        snapshotFlow { mainViewModel.uiState.value }
+            .collect { state ->
+                if (state.message != null) {
+                    snackbarHostState.showSnackbar(state.message)
+
+                    mainViewModel.updateToDefault()
+                }
+            }
+    }
 
 
     Scaffold(
@@ -317,12 +324,15 @@ fun PlayerScreen(
                 playerController.selectedTrack?.let {
                     mainViewModel.addSongToPlaylist(it, playlist)
                 }
+
+                scope.launch {
+                    snackbarHostState.showSnackbar(snackbarMessage)
+                }
+
             }) {
             scope.launch {
                 playlistSheetState.hide()
                 addToPlaylistClicked = false
-
-                snackbarHostState.showSnackbar(snackbarMessage)
             }
         }
     }

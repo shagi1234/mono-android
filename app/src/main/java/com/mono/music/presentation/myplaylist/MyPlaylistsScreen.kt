@@ -90,10 +90,6 @@ fun MyPlaylistsScreen(
     val playlists by myPlaylistsViewModel.playlists.collectAsState(initial = emptyList())
     val favoritesPlaylist by myPlaylistsViewModel.favoritesPlaylist.collectAsState(null)
 
-    LaunchedEffect(Unit) {
-        Log.e("Playlist________", "MyPlaylistsScreen: $favoritesPlaylist")
-    }
-
     val type by myPlaylistsViewModel.type.collectAsState("")
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()

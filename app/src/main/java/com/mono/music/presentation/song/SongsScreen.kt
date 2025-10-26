@@ -61,7 +61,7 @@ import kotlinx.coroutines.launch
 @Destination(style = ScreenTransition::class)
 @Composable
 fun SongsScreen(
-    title:String? = null,
+    title: String? = null,
     artistId: Long,
     isTop: Int,
     isSingle: Int,
@@ -109,8 +109,8 @@ fun SongsScreen(
 
     val songs = songsViewModel.songs.collectAsLazyPagingItems()
 
-    LaunchedEffect(uiState.message){
-        if (!uiState.message.isNullOrEmpty()){
+    LaunchedEffect(uiState.message) {
+        if (!uiState.message.isNullOrEmpty()) {
             scope.launch {
                 snackbarHostState.showSnackbar(
                     uiState.message!!
@@ -121,11 +121,12 @@ fun SongsScreen(
     }
 
 
-    Scaffold(modifier = Modifier
-        .fillMaxSize()
-        .background(
-            AlbumCoverBlackBG
-        ),
+    Scaffold(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                AlbumCoverBlackBG
+            ),
 
         snackbarHost = {
             SnackbarHost(snackbarHostState) { data ->
@@ -157,14 +158,16 @@ fun SongsScreen(
             NotFoundView(Modifier.fillMaxSize())
         } else {
 
-            LazyColumn(modifier = Modifier
-                .padding(top = padding.calculateTopPadding())
-                .fillMaxSize(),
+            LazyColumn(
+                modifier = Modifier
+                    .padding(top = padding.calculateTopPadding())
+                    .fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 100.dp)
             ) {
                 items(songs) { song ->
 
-                    SwipeableSongView(song = song!!,
+                    SwipeableSongView(
+                        song = song!!,
                         playerController = songsViewModel.getPlayerController(),
                         onMoreClicked = {
                             songsViewModel.selectedSong = it
@@ -179,7 +182,8 @@ fun SongsScreen(
                             }
                         }
                     ) {
-                        songsViewModel.getPlayerController().init(song, songs.itemSnapshotList.items)
+                        songsViewModel.getPlayerController()
+                            .init(song, songs.itemSnapshotList.items)
                     }
                 }
             }
@@ -203,10 +207,12 @@ fun SongsScreen(
                     }
                 },
                 onNavigateToArtist = {
-                    if ( songsViewModel.selectedSong.artists.size == 1) {
-                        songsViewModel.selectedSong.getArtist().id.let { navigator.navigate(
-                            ArtistScreenDestination(it)
-                        )}
+                    if (songsViewModel.selectedSong.artists.size == 1) {
+                        songsViewModel.selectedSong.getArtist().id.let {
+                            navigator.navigate(
+                                ArtistScreenDestination(it)
+                            )
+                        }
                     } else {
                         showArtistDialog = true
                     }
@@ -219,7 +225,7 @@ fun SongsScreen(
                     }
                 },
                 onShare = {
-                    ShareUtils.shareLink(context = context, link = BASE_URL )
+                    ShareUtils.shareLink(context = context, link = BASE_URL)
                 },
             ) {
                 scope.launch {
@@ -234,14 +240,14 @@ fun SongsScreen(
 
         if (addToPlaylistClicked) {
             AddToPlaylistBottomSheet(
-                selectedSong =  songsViewModel.selectedSong,
+                selectedSong = songsViewModel.selectedSong,
                 playlists = playlists,
                 playlistSheetState = playlistSheetState,
                 onCreateNewPlaylist = {
                     showNewPlaylistDialog = true
                 },
-                onSelect = {  playlist, song ->
-                    songsViewModel.addSongToPlaylist( songsViewModel.selectedSong, playlist)
+                onSelect = { playlist, song ->
+                    songsViewModel.addSongToPlaylist(songsViewModel.selectedSong, playlist)
                 }
             ) {
                 scope.launch {
@@ -263,8 +269,8 @@ fun SongsScreen(
 
         if (showArtistDialog) {
             ArtistBottomSheet(
-                selectedSong =  songsViewModel.selectedSong,
-                artists =  songsViewModel.selectedSong.artists,
+                selectedSong = songsViewModel.selectedSong,
+                artists = songsViewModel.selectedSong.artists,
                 sheetState = artistsSheetState,
                 onSelect = { artist -> navigator.navigate(ArtistScreenDestination(artist.id)) },
                 onDismiss = { showArtistDialog = false }

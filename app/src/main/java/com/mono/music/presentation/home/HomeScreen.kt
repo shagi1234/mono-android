@@ -88,6 +88,8 @@ import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 import kotlin.math.truncate
 import androidx.core.net.toUri
+import com.mono.music.MainViewModel
+import com.mono.music.domain.models.Message
 
 @OptIn(ExperimentalMaterial3Api::class)
 @RootNavGraph(start = true)
@@ -100,6 +102,7 @@ fun HomeScreen(
     val context = LocalContext.current
 
     val homeViewModel = hiltViewModel<HomeViewModel>()
+    val mainViewModel = hiltViewModel<MainViewModel>()
 
     val uiState by homeViewModel.uiState.collectAsState()
 
@@ -340,6 +343,10 @@ fun HomeScreen(
                 },
                 onSelect = { playlist, song ->
                     homeViewModel.addSongToPlaylist(homeViewModel.selectedSong, playlist)
+
+                    scope.launch {
+                        snackbarHostState.showSnackbar("hhhhhh")
+                    }
                 }
             ) {
                 scope.launch {
@@ -372,9 +379,9 @@ fun HomeScreen(
 
         if (showUpdateSheet) {
             HasUpdateBottomSheet(
-                onUpdateClick = { navigateToPlayMarket(context=context) },
+                onUpdateClick = { navigateToPlayMarket(context = context) },
                 onCloseClick = {
-                    showUpdateSheet= false
+                    showUpdateSheet = false
                 })
 
         }

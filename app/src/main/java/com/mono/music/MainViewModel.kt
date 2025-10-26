@@ -34,6 +34,7 @@ import com.mono.music.player.DownloadTracker
 import com.mono.music.ui.utils.BaseUIState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -84,25 +85,36 @@ class MainViewModel @Inject constructor(
     val likeStates = _likeState.asStateFlow()
 
 
-    fun likeSong(songId: Long, liked: Boolean) {
-        viewModelScope.launch {
+    fun likeSong(songId: Long, liked: Boolean, onSuccess:()-> Unit = {}) {
+        viewModelScope.launch(Dispatchers.IO) {
             try {
+                // Инвертируем текущее состояние
+                val newLikedState = !liked
                 val result = songRepository.likeSong(songId, liked)
-                val isLiked = result.liked ?: false
+                val isLiked = result.liked ?: newLikedState
 
                 _likeState.value = _likeState.value.toMutableMap().apply {
                     put(songId, isLiked)
                 }
 
+                val selectedSong = songRepository.getSongById(songId)
                 if (isLiked) {
-                    playerController.selectedTrack?.let { song ->
+                    selectedSong?.let { song ->
                         addToFavorites(song.copy(isLiked = true))
                     }
+
+                    _uiState.update { it.updateMessage(context.getString(R.string.successfully_added)) }
+
                 } else {
-                    playerController.selectedTrack?.let { song ->
+                    selectedSong?.let { song ->
                         removeFromFavorites(song)
                     }
+                    _uiState.update { it.updateMessage(context.getString(R.string.successfully_deleted)) }
                 }
+
+                delay(100)
+                onSuccess()
+
 
             } catch (e: Exception) {
                 _likeState.value = _likeState.value.toMutableMap().apply {
@@ -307,6 +319,7 @@ class MainViewModel @Inject constructor(
     fun updateToDefault() {
         _uiState.update { it.updateToDefault() }
     }
+
 
     fun checkIsValid(validUntil: String): Boolean {
 

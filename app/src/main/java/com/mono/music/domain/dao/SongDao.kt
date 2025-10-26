@@ -45,7 +45,7 @@ interface SongDao {
         "SELECT Playlist.*," +
                 "( SELECT  COUNT(*) FROM  PlaylistSongCrossRef " +
                 "WHERE   playlistId = playlist.playlistId) AS songsCount  " +
-                "FROM  playlist  WHERE isBuiltin=0 ORDER BY dateAdded DESC"
+                "FROM playlist WHERE isBuiltin = 0 AND isFavorites = 0 ORDER BY dateAdded DESC"
     )
     fun getLocalPlaylists(): Flow<MutableList<Playlist>>
 

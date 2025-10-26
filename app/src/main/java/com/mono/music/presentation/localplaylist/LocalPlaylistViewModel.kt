@@ -26,6 +26,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
@@ -53,6 +55,25 @@ class LocalPlaylistViewModel @Inject constructor(
     fun getPlayerController() = playerController
 
     fun getDownloadTracker() = downloadTracker
+
+    // Добавьте StateFlow для плейлиста
+    private val _currentPlaylist = MutableStateFlow<PlaylistWithSongs?>(null)
+    val currentPlaylist: StateFlow<PlaylistWithSongs?> = _currentPlaylist.asStateFlow()
+
+
+    // Добавьте функцию для загрузки плейлиста
+    fun loadPlaylist(id: Long, isFavorites: Boolean) {
+        viewModelScope.launch {
+            getPlaylist(id, isFavorites).collect { playlist ->
+                _currentPlaylist.value = playlist
+            }
+        }
+    }
+
+    // Функция для обновления плейлиста (вызывайте после добавления/удаления)
+    fun refreshPlaylist(id: Long, isFavorites: Boolean) {
+        loadPlaylist(id, isFavorites)
+    }
 
     fun getPlaylist(id: Long, isFavorites: Boolean): Flow<PlaylistWithSongs?> {
         return if (isFavorites) {
@@ -93,8 +114,6 @@ class LocalPlaylistViewModel @Inject constructor(
                             }
                         )
                     }
-
-
 
                     emit(playlistWithSongs)
                     playlistWithSongs?.let {
@@ -166,29 +185,29 @@ class LocalPlaylistViewModel @Inject constructor(
         }
     }
 
-
-    @OptIn(UnstableApi::class)
-    fun refreshPlaylist(id: Long) {
-        _uiState.update { it.updateToLoading() }
-        viewModelScope.launch {
-            try {
-                val playlist = songRepository.getLocalPlaylist(id = id)
-                withContext(Dispatchers.IO) {
-//                    songRepository.insertPlaylist(playlist)
-                    playlist.songs?.forEach { song ->
-                        songRepository.insertSong(song)
-                        val crossRef = PlaylistSongCrossRef(playlist.playlistId, song.songId)
-                        songRepository.insertPlaylistSongCrossRef(crossRef)
-                        if (playlist.downloadable) {
-                            downloadTracker.download(song.toMediaItem())
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                _uiState.update { it.updateMessage(e.message) }
-            }
-        }
-    }
+//
+//    @OptIn(UnstableApi::class)
+//    fun refreshPlaylist(id: Long) {
+//        _uiState.update { it.updateToLoading() }
+//        viewModelScope.launch {
+//            try {
+//                val playlist = songRepository.getLocalPlaylist(id = id)
+//                withContext(Dispatchers.IO) {
+////                    songRepository.insertPlaylist(playlist)
+//                    playlist.songs?.forEach { song ->
+//                        songRepository.insertSong(song)
+//                        val crossRef = PlaylistSongCrossRef(playlist.playlistId, song.songId)
+//                        songRepository.insertPlaylistSongCrossRef(crossRef)
+//                        if (playlist.downloadable) {
+//                            downloadTracker.download(song.toMediaItem())
+//                        }
+//                    }
+//                }
+//            } catch (e: Exception) {
+//                _uiState.update { it.updateMessage(e.message) }
+//            }
+//        }
+//    }
 
     fun getAllPlaylists(): Flow<List<Playlist>> {
         return songRepository.getLocalPlaylists()

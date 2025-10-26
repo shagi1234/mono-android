@@ -1,5 +1,8 @@
 package com.mono.music.ui.components.bottomsheet
 
+import android.content.Context
+import android.content.ContextWrapper
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -23,12 +26,17 @@ import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -36,9 +44,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
+import com.mono.music.MainViewModel
 import com.mono.music.R
 import com.mono.music.domain.models.Song
+import com.mono.music.presentation.playlist.PlaylistViewModel
+import com.mono.music.presentation.settings.findActivity
 import com.mono.music.ui.components.ActionsModelView
 import com.mono.music.ui.components.CustomButton
 import com.mono.music.ui.theme.AlbumCoverBlackBG
@@ -56,7 +70,6 @@ fun TrackBottomSheet(
     selectedSong: Song,
     songSettingsSheetState: SheetState,
     onAddToPlaylist: () -> Unit,
-    onAddToFavorites: () -> Unit = {},
     onPlayNext: () -> Unit,
     onNavigateToArtist: () -> Unit,
     onNavigateToAlbum: () -> Unit,
@@ -64,6 +77,20 @@ fun TrackBottomSheet(
     onDelete: () -> Unit = {},
     onDismiss: () -> Unit
 ) {
+
+//    val mainViewModel = hiltViewModel<MainViewModel>()
+
+    val context = LocalContext.current
+    val activity = context.findActivity_()
+    val mainViewModel = hiltViewModel<MainViewModel>(activity)
+
+
+    val likeState by mainViewModel.likeStates.collectAsState()
+    val liked = likeState[selectedSong.songId] ?: selectedSong.isLiked ?: false
+
+
+
+
     ModalBottomSheet(
         modifier = Modifier,
         containerColor = AlbumCoverBlackBG,
@@ -129,13 +156,25 @@ fun TrackBottomSheet(
             }
 
 
+            val actionText =
+                if (!liked) stringResource(id = R.string.add_to_favorites) else stringResource(
+                    id = R.string.remove_from_fav
+                )
+            val actionIcon =
+                if (!liked) R.drawable.ic_like else
+                    R.drawable.ic_heart_filled
+
             ActionsModelView(
                 expandable = true,
-                icon = R.drawable.ic_like,
-                mainText = stringResource(id = R.string.add_to_favorites)
+                icon = actionIcon,
+                mainText = actionText
             ) {
-                onAddToFavorites()
-                onDismiss()
+                mainViewModel.likeSong(
+                    songId = selectedSong.songId,
+                    liked = liked
+                ) {
+                    onDismiss()
+                }
 
             }
 
@@ -215,6 +254,15 @@ fun TrackBottomSheet(
         }
 
     }
+}
+
+fun Context.findActivity_(): ComponentActivity {
+    var context = this
+    while (context is ContextWrapper) {
+        if (context is ComponentActivity) return context
+        context = context.baseContext
+    }
+    throw IllegalStateException("No Activity found")
 }
 
 

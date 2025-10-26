@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mono.music.MainActivity
+import com.mono.music.MainViewModel
 import com.mono.music.R
 import com.mono.music.di.DataModule
 import com.mono.music.domain.models.Playlist
@@ -62,6 +63,7 @@ import com.mono.music.ui.components.SwipeableSongView
 import com.mono.music.ui.components.bottomsheet.AddToPlaylistBottomSheet
 import com.mono.music.ui.components.bottomsheet.ArtistBottomSheet
 import com.mono.music.ui.components.bottomsheet.TrackBottomSheet
+import com.mono.music.ui.components.bottomsheet.findActivity_
 import com.mono.music.ui.theme.AlbumCoverBlackBG
 import com.mono.music.ui.theme.Background
 import com.mono.music.ui.theme.Inactive
@@ -80,21 +82,28 @@ import kotlinx.coroutines.launch
 @Destination(style = ScreenTransition::class)
 fun LocalPlaylistScreen(
     id: Long,
-    isFavorites:Boolean,
+    isFavorites: Boolean,
     navigator: DestinationsNavigator,
 ) {
-    val context = LocalContext.current
 
     val localPlaylistViewModel = hiltViewModel<LocalPlaylistViewModel>()
+
+    val context = LocalContext.current
+    val activity = context.findActivity_()
+    val mainViewModel = hiltViewModel<MainViewModel>(activity)
 
 //    val playlist by localPlaylistViewModel.getPlaylist(id, isFavorites).collectAsState(initial = null)
 
 
-    val playlist by remember(id, isFavorites) {
-        localPlaylistViewModel.getPlaylist(id, isFavorites)
-    }.collectAsState(initial = null)
+//    val playlist by remember(id, isFavorites) {
+//        localPlaylistViewModel.getPlaylist(id, isFavorites)
+//    }.collectAsState(initial = null)
+
+
+    val playlist by localPlaylistViewModel.currentPlaylist.collectAsState()
 
     val uiState by localPlaylistViewModel.uiState.collectAsState()
+    val favoritesState by mainViewModel.uiState.collectAsState()
 
 
     var settingsClicked by remember {
@@ -137,27 +146,29 @@ fun LocalPlaylistScreen(
 
     val configuration = LocalConfiguration.current
     val screenWidth = (configuration.screenWidthDp * 1.1).dp
-    LaunchedEffect(Unit) {
-        if (!isFavorites)
-            localPlaylistViewModel.refreshPlaylist(id)
+
+    LaunchedEffect(id, isFavorites) {
+        localPlaylistViewModel.loadPlaylist(id, isFavorites)
     }
-
-
 
     LaunchedEffect(uiState.isLoading) {
         showLoading = uiState.isLoading
     }
 
-//    LaunchedEffect(uiState.message) {
-//        if (!uiState.message.isNullOrEmpty()) {
-//            scope.launch {
-//                snackbarHostState.showSnackbar(
-//                    uiState.message!!
-//                )
-//            }
-//            localPlaylistViewModel.updateToDefault()
-//        }
-//    }
+    LaunchedEffect(favoritesState) {
+
+        Log.e("FAV_STATE", "LocalPlaylistScreen: $favoritesState ")
+
+        if (!uiState.message.isNullOrEmpty()) {
+            scope.launch {
+                snackbarHostState.showSnackbar(
+                    uiState.message!!
+                )
+            }
+            localPlaylistViewModel.refreshPlaylist(id, isFavorites)
+            localPlaylistViewModel.updateToDefault()
+        }
+    }
 
     Scaffold(
         modifier = Modifier
@@ -257,7 +268,7 @@ fun LocalPlaylistScreen(
                         onPlay = {
                             playlist?.songs?.let { data ->
 
-                                Log.e("SONGSSSS___", "LocalPlaylistScreen: $data", )
+                                Log.e("SONGSSSS___", "LocalPlaylistScreen: $data")
                                 if (data.isNotEmpty()) {
                                     localPlaylistViewModel.getPlayerController().init(data[0], data)
                                 }
@@ -313,7 +324,6 @@ fun LocalPlaylistScreen(
                     selectedSong = localPlaylistViewModel.selectedSong,
                     songSettingsSheetState = songSettingsSheetState,
                     onAddToPlaylist = {
-//                        settingsClicked = false
                         addToPlaylistClicked = true
                     },
                     onNavigateToAlbum = {
@@ -404,7 +414,7 @@ fun LocalPlaylistScreen(
                 )
             }
 
-            if (showLoading){
+            if (showLoading) {
                 Dialog(
                     onDismissRequest = { },
                 ) {
