@@ -28,10 +28,9 @@ interface SongDao {
         "SELECT Playlist.*," +
                 "( SELECT  COUNT(*) FROM  PlaylistSongCrossRef " +
                 "WHERE   playlistId = playlist.playlistId) AS songsCount  " +
-                "FROM  playlist WHERE type LIKE '%' || :type || '%' "
+                "FROM  playlist WHERE type LIKE '%' || :type || '%' AND isFavorites != 1"
     )
     fun getAllPlaylists(type: String): Flow<MutableList<Playlist>>
-
 
 
     @Query(
@@ -49,7 +48,6 @@ interface SongDao {
                 "FROM  playlist  WHERE isBuiltin=0 ORDER BY dateAdded DESC"
     )
     fun getLocalPlaylists(): Flow<MutableList<Playlist>>
-
 
 
 //    @Query("SELECT Playlist.*," +
@@ -108,4 +106,25 @@ interface SongDao {
 
     @Query("SELECT EXISTS(SELECT * FROM PlaylistSongCrossRef WHERE songId = :songId)")
     fun isSongInAnyPlaylist(songId: Long): Flow<Boolean>
+
+
+    @Query(
+        "SELECT Playlist.*, " +
+                "( SELECT COUNT(*) FROM PlaylistSongCrossRef " +
+                "WHERE playlistId = playlist.playlistId) AS songsCount " +
+                "FROM playlist WHERE isFavorites = 1 LIMIT 1"
+    )
+    fun getFavoritesPlaylist(): Flow<Playlist?>
+
+    @Transaction
+    @Query("SELECT * FROM playlist WHERE isFavorites = 1 LIMIT 1")
+    fun getFavoritesPlaylistWithSongs(): Flow<PlaylistWithSongs?>
+
+
+
+    @Query("SELECT * FROM song WHERE songId = :songId")
+     fun getSongById(songId: Long): Song?
+
+    @Update
+     fun updateSong(song: Song)
 }

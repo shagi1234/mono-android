@@ -197,7 +197,7 @@ fun PlaylistScreen(
             },
             topBar = {
                 TopBar(
-                    modifier = Modifier.background(Color.Red).clickWithoutIndication { navigator.navigateUp() },
+                    modifier = Modifier.clickWithoutIndication { navigator.navigateUp() },
                     onBack = {
                         haptic(HapticType.MEDIUM)
                         navigator.navigateUp()
@@ -206,8 +206,7 @@ fun PlaylistScreen(
                     val fraction = this.fraction
                     Box(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .background(color = MaterialTheme.colorScheme.background),
+                            .fillMaxSize(),
                     ) {
                         ImageGrid(
                             imageUrls = uiState.data?.getPlaylistImage(true) ?: emptyList(),
@@ -293,11 +292,12 @@ fun PlaylistScreen(
                 }
             }) { insets ->
             LazyColumn(
-                state = listState,
+              state = listState,
                 contentPadding = PaddingValues(
                     top = insets.calculateTopPadding(),
                     bottom = 100.dp
-                )
+                ),
+
             ) {
                 if (uiState.isSuccess) {
                     item {

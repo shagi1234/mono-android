@@ -54,7 +54,7 @@ class SongRepository @Inject constructor(
         return apiService.getPlaylist(type, id)
     }
 
-    suspend fun getFavoriteSongs():Paging<ResponseSong>{
+    suspend fun getFavoriteSongs(): Paging<ResponseSong> {
         return apiService.favoriteSongs()
     }
 
@@ -208,13 +208,25 @@ class SongRepository @Inject constructor(
     }
 
 
-
-
-    suspend fun likeSong(songId:Long, liked: Boolean):Message{
-        val action = if (liked)   "unlike" else "like"
+    suspend fun likeSong(songId: Long, liked: Boolean): Message {
+        val action = if (liked) "unlike" else "like"
         val requestBody = RequestLikeSong(songId, action)
-        return  apiService.likeSong(requestBody)
+        return apiService.likeSong(requestBody)
     }
+
+
+    fun getFavoritesPlaylist(): Flow<Playlist?> {
+        return songDao.getFavoritesPlaylist()
+    }
+
+
+    fun getFavoritesPlaylistWithSongs(): Flow<PlaylistWithSongs?> {
+        return songDao.getFavoritesPlaylistWithSongs()
+    }
+
+    fun getSongById(songId: Long): Song? = songDao.getSongById(songId)
+
+    fun updateSong(song: Song) = songDao.updateSong(song)
 
     companion object {
         const val DEFAULT_PAGE_SIZE = 10

@@ -60,9 +60,7 @@ import com.mono.music.ui.utils.getDominantColorFromImageUrl
 import kotlinx.coroutines.launch
 
 @SuppressLint("UnrememberedMutableState")
-@OptIn(
-    ExperimentalMaterial3Api::class,
-)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlayerScreen(
     mainViewModel: MainViewModel,
@@ -119,14 +117,12 @@ fun PlayerScreen(
 
     val likeState by mainViewModel.likeStates.collectAsState()
     val liked = playerController.selectedTrack?.songId?.let { songId ->
-        // Check MainViewModel state first, fallback to playerController's isLiked
         likeState[songId] ?: playerController.selectedTrack?.isLiked ?: false
     } ?: false
 
     val snackbarHostState = remember { SnackbarHostState() }
 
     val addToQueueMessage = stringResource(id = R.string.successfully_added)
-
 
     LaunchedEffect(playerController.selectedTrack) {
         if (playerController.selectedTrack != null) {
@@ -147,7 +143,6 @@ fun PlayerScreen(
     }
 
     LaunchedEffect(playerController.selectedTrack?.songId) {
-        // Clear source info if the track has changed but source info is stale
         if (playerController.selectedTrack != null) {
             PlayerSourceInfo.checkAndClearIfNeeded(playerController.selectedTrack?.songId)
         }
@@ -230,7 +225,6 @@ fun PlayerScreen(
                             songId = playerController.selectedTrack?.songId ?: 0,
                             liked = liked
                         )
-
 
                     },
                     isInPlaylist = isInPlaylist,

@@ -128,15 +128,6 @@ fun AppNavGraph(
             mainViewModel.getFreePlan()
         }
     }
-    LaunchedEffect(validUntil, isFirstTime, loggedIn, isRegisterCompleted, planSelected)
-    {
-        Log.e("CHECK______", "validUntil: $validUntil")
-        Log.e("CHECK______", "isFirstTime: $isFirstTime")
-        Log.e("CHECK______", "loggedIn: $loggedIn")
-        Log.e("CHECK______", "isRegisterCompleted: $isRegisterCompleted")
-        Log.e("CHECK______", "planSlected: $planSelected")
-
-    }
 
     LaunchedEffect(uiState.message) {
         if (!uiState.message.isNullOrEmpty()) {
@@ -152,7 +143,7 @@ fun AppNavGraph(
     Box(
         contentAlignment = Alignment.BottomCenter
     ) {
-        if (loggedIn == true && isRegisterCompleted == true && planSelected==true) {
+        if (loggedIn == true && isRegisterCompleted == true && planSelected == true) {
             LaunchedEffect(validUntil, isFirstTime) {
                 if (validUntil == null || isFirstTime == null || isFirstTime == "") {
                     mainViewModel.getUserData()
@@ -178,7 +169,7 @@ fun AppNavGraph(
                         navController = navController,
                         navGraph = NavGraphs.root,
                         startRoute = HomeScreenDestination,
-                        engine = rememberAnimatedNavHostEngine(),
+                        engine = rememberAnimatedNavHostEngine()
                     )
 
                     BackHandler(isNowPlayingScreenVisible) {
@@ -299,10 +290,13 @@ fun AppNavGraph(
                     navController.navigate(TariffsScreenDestination)
                 }
             }
-        } else if (loggedIn == false || isRegisterCompleted == false || planSelected ==false){
+        } else if (loggedIn == false || isRegisterCompleted == false || planSelected == false) {
             DestinationsNavHost(
-                navController = navController, navGraph = NavGraphs.login, modifier = Modifier,
-                startRoute = OnBoardingScreenDestination, engine = onBoardingNavHostEngine
+                navController = navController,
+                navGraph = NavGraphs.login,
+                modifier = Modifier,
+                startRoute = OnBoardingScreenDestination,
+                engine = onBoardingNavHostEngine
             )
         }
 

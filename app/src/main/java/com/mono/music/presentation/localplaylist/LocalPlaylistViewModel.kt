@@ -3,11 +3,9 @@ package com.mono.music.presentation.localplaylist
 import android.app.Application
 import android.util.Log
 import androidx.annotation.OptIn
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.util.UnstableApi
-import coil.network.HttpException
 import com.google.common.base.Preconditions
 import com.mono.music.PlayerController
 import com.mono.music.R
@@ -46,32 +44,23 @@ class LocalPlaylistViewModel @Inject constructor(
     private val downloadTracker: DownloadTracker,
     private val preferenceDataStoreHelper: PreferenceDataStoreHelper
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(BaseUIState<PlaylistWithSongs>())
 
     val uiState = _uiState
 
     lateinit var selectedSong: Song
 
-
     fun getPlayerController() = playerController
 
     fun getDownloadTracker() = downloadTracker
 
-    fun getPlaylist(id: Long): Flow<PlaylistWithSongs?> {
-//        return songRepository.getPlaylistWithSongs(id)
-
-        return if (id == -1L) {
+    fun getPlaylist(id: Long, isFavorites: Boolean): Flow<PlaylistWithSongs?> {
+        return if (isFavorites) {
             flow {
                 _uiState.update { it.updateToLoading() }
                 try {
                     val favorites = songRepository.getFavoriteSongs()
 
-                    // Save count to DataStore
-                    preferenceDataStoreHelper.putPreference(
-                        PreferenceDataStoreConstants.FAVORITES_COUNT,
-                        favorites.total ?: 0
-                    )
                     val favoriteSongs = favorites.results.map { favoriteResponse ->
                         favoriteResponse.song.copy(isLiked = true)
                     }
@@ -79,16 +68,38 @@ class LocalPlaylistViewModel @Inject constructor(
                         PlaylistWithSongs(
                             playlist = Playlist(
                                 playlistId = -1L,
-                                name =  application.getString(R.string.favorites),
+                                name = application.getString(R.string.favorites),
                                 songsCount = favorites.total ?: 0,
+                                isFavorites = true
                             ),
                             songs = favoriteSongs
                         )
+
+                    syncLikedSongsToFavorites(playlistWithSongs.songs)
                     emit(playlistWithSongs)
                     _uiState.update { it.updateToLoaded(playlistWithSongs) }
                 } catch (e: Exception) {
-                    _uiState.update { it.updateToFailure() }
-                    emit(null)
+                    val localFavoritesPlaylist = songRepository.getFavoritesPlaylistWithSongs().first()
+
+                    val playlistWithSongs = localFavoritesPlaylist?.let { playlistWithSongs ->
+                        PlaylistWithSongs(
+                            playlist = playlistWithSongs.playlist.copy(
+                                name = application.getString(R.string.favorites),
+                                songsCount = playlistWithSongs.songs.size,
+                                isFavorites = true
+                            ),
+                            songs = playlistWithSongs.songs.map { song ->
+                                song.copy(isLiked = true)
+                            }
+                        )
+                    }
+
+
+
+                    emit(playlistWithSongs)
+                    playlistWithSongs?.let {
+                        _uiState.update { state -> state.updateToLoaded(it) }
+                    }
                 }
             }
         } else {
@@ -96,10 +107,62 @@ class LocalPlaylistViewModel @Inject constructor(
                 val localPlaylist = songRepository.getPlaylistWithSongs(id).first()
                 _uiState.update { it.updateToLoaded(localPlaylist) }
                 emit(localPlaylist)
+            }
+        }
+    }
 
+    private suspend fun getFavoriteSongsLocal(): PlaylistWithSongs? {
 
+        val localFavoritesPlaylist = songRepository.getFavoritesPlaylist().first()
+
+        val playlistWithSongs =
+            localFavoritesPlaylist?.let { playlist ->
+                PlaylistWithSongs(
+                    playlist = Playlist(
+                        playlistId = -1L,
+                        name = application.getString(R.string.favorites),
+                        songsCount = playlist.songsCount,
+                    ),
+                    songs = playlist.songs ?: emptyList()
+                )
             }
 
+        return playlistWithSongs
+
+    }
+
+    private fun syncLikedSongsToFavorites(songs: List<Song>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val likedSongs = songs.filter { it.isLiked == true }
+                if (likedSongs.isEmpty()) return@launch
+
+                val favoritesPlaylist = songRepository.getFavoritesPlaylist().first()
+                val playlist = favoritesPlaylist ?: run {
+                    // Create favorites playlist if it doesn't exist
+                    val res = songRepository.customPlaylistToLibrary(
+                        PlaylistAction(
+                            action = ACTION_ADD,
+                            name = "Favorites"
+                        )
+                    )
+                    val newPlaylist = Playlist(
+                        name = "Favorites",
+                        playlistId = res.playlistId,
+                        isFavorites = true,
+                    )
+                    songRepository.insertPlaylist(newPlaylist)
+                    newPlaylist
+                }
+
+                // Add all liked songs to favorites
+                likedSongs.forEach { song ->
+                    addSongToPlaylist(song, playlist)
+                }
+
+            } catch (e: Exception) {
+                _uiState.update { it.updateMessage(e.message) }
+            }
         }
     }
 

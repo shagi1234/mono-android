@@ -88,6 +88,11 @@ fun MyPlaylistsScreen(
         mutableStateOf<Playlist?>(null)
     }
     val playlists by myPlaylistsViewModel.playlists.collectAsState(initial = emptyList())
+    val favoritesPlaylist by myPlaylistsViewModel.favoritesPlaylist.collectAsState(null)
+
+    LaunchedEffect(Unit) {
+        Log.e("Playlist________", "MyPlaylistsScreen: $favoritesPlaylist")
+    }
 
     val type by myPlaylistsViewModel.type.collectAsState("")
     val snackbarHostState = remember { SnackbarHostState() }
@@ -100,7 +105,6 @@ fun MyPlaylistsScreen(
     )
 
 
-    val favoritesCount by myPlaylistsViewModel.favoritesCount.collectAsState(initial = 0)
 
     LaunchedEffect(uiState.message) {
         if (!uiState.message.isNullOrEmpty()) {
@@ -162,27 +166,37 @@ fun MyPlaylistsScreen(
             LazyColumn(
                 contentPadding = PaddingValues(top = 10.dp, bottom = 100.dp)
             ) {
-                val favoritesPlaylist = Playlist(
-                    playlistId = -1L,
-                    name = "Favorites",
-                )
+
+
                 // Add static "Favorites" item
                 if (type == ALL)
+
                     item {
-                        LocalPlayListView(
-                            playlist = favoritesPlaylist,
-                            count = favoritesCount,
-                            onEdit = {
-                                showNewPlaylistDialog = true
-                                selectedPlaylist = favoritesPlaylist
-                            },
-                            isFavorites = true,
-                            onDelete = {},
-                            selectPlaylist = {
-                                navigator.navigate(LocalPlaylistScreenDestination(-1L))
+                        favoritesPlaylist?.let {
+                            if (it.songsCount != 0) {
+
+                                Log.e("PLAYLIST________", "MyPlaylistsScreen: $it", )
+                                LocalPlayListView(
+                                    playlist =   it,
+                                    count = it.songsCount,
+                                    onEdit = {
+                                        showNewPlaylistDialog = true
+                                        selectedPlaylist = it
+                                    },
+                                    isFavorites = true,
+                                    onDelete = {},
+                                    selectPlaylist = {
+                                        navigator.navigate(
+                                            LocalPlaylistScreenDestination(
+                                                it.playlistId, it.isFavorites
+                                            )
+                                        )
+                                    }
+                                )
                             }
-                        )
+                        }
                     }
+
                 items(playlists) { playlist ->
                     LocalPlayListView(
                         playlist = playlist, count = playlist.songsCount, onEdit = {
@@ -192,7 +206,12 @@ fun MyPlaylistsScreen(
                         onDelete = {
                             myPlaylistsViewModel.deletePlaylist(playlist)
                         }, selectPlaylist = {
-                            navigator.navigate(LocalPlaylistScreenDestination(playlist.playlistId))
+                            navigator.navigate(
+                                LocalPlaylistScreenDestination(
+                                    playlist.playlistId,
+                                    false
+                                )
+                            )
                         })
 
 

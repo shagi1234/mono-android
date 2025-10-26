@@ -30,6 +30,8 @@ data class Playlist(
     @SerializedName("is_builtin_playlist")
     var isBuiltin: Boolean = false,
     var dateAdded: Long = 0,
+
+    var isFavorites: Boolean = false,
 ) {
     fun getPlaylistImage(isBuiltin: Boolean = false): List<String?> {
         if (isBuiltin || this.isBuiltin) {

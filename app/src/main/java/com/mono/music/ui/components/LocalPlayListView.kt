@@ -58,7 +58,7 @@ fun LocalPlayListView(
 ) {
     val localPlaylistViewModel = hiltViewModel<LocalPlaylistViewModel>()
 
-    val play by localPlaylistViewModel.getPlaylist(playlist.playlistId)
+    val play by localPlaylistViewModel.getPlaylist(playlist.playlistId, isFavorites)
         .collectAsState(initial = null)
 
     var expanded by remember {

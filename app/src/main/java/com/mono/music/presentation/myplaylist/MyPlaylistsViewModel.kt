@@ -65,13 +65,17 @@ class MyPlaylistsViewModel @Inject constructor(
     val uiState: StateFlow<BaseUIState<List<Playlist>>> = _uiState.asStateFlow()
 
     val type = savedStateHandle.getStateFlow("type", "")
-    val favoritesCount = preferenceDataStoreHelper.getPreference(FAVORITES_COUNT, 0)
+
+    val favoritesPlaylist = songRepository.getFavoritesPlaylist()
+
 
     private var currentPage = 1
 
     init {
         loadMorePlaylists()
+
     }
+
 
     fun getAllPlaylists(): Flow<List<Playlist>> {
         return songRepository.getAllPlaylists("")

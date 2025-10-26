@@ -63,7 +63,6 @@ private fun PreviewTopAppBarLazyColumn() {
             state = listState,
             topBar = {
                 TopBar(
-                    modifier = Modifier.background(Color.Red),
                     onBack = {},
                     actions = {
                         Box(

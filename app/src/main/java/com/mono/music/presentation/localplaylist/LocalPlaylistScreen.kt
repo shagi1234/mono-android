@@ -80,19 +80,22 @@ import kotlinx.coroutines.launch
 @Destination(style = ScreenTransition::class)
 fun LocalPlaylistScreen(
     id: Long,
+    isFavorites:Boolean,
     navigator: DestinationsNavigator,
 ) {
     val context = LocalContext.current
 
     val localPlaylistViewModel = hiltViewModel<LocalPlaylistViewModel>()
 
-//    val playlist by localPlaylistViewModel.getPlaylist(id).collectAsState(initial = null)
+//    val playlist by localPlaylistViewModel.getPlaylist(id, isFavorites).collectAsState(initial = null)
+
+
+    val playlist by remember(id, isFavorites) {
+        localPlaylistViewModel.getPlaylist(id, isFavorites)
+    }.collectAsState(initial = null)
 
     val uiState by localPlaylistViewModel.uiState.collectAsState()
 
-    val playlist by remember(id) {
-        localPlaylistViewModel.getPlaylist(id)
-    }.collectAsState(initial = null)
 
     var settingsClicked by remember {
         mutableStateOf(false)
@@ -135,7 +138,7 @@ fun LocalPlaylistScreen(
     val configuration = LocalConfiguration.current
     val screenWidth = (configuration.screenWidthDp * 1.1).dp
     LaunchedEffect(Unit) {
-        if (id != -1L)
+        if (!isFavorites)
             localPlaylistViewModel.refreshPlaylist(id)
     }
 
@@ -143,24 +146,18 @@ fun LocalPlaylistScreen(
 
     LaunchedEffect(uiState.isLoading) {
         showLoading = uiState.isLoading
-//        Log.d(
-//            "DEBUG",
-//            "uiState changed: isPending=${uiState.isPending}, isLoaded=${uiState.isSuccess}, isFailure=${uiState.isFailure}"
-//        )
     }
 
-
-
-    LaunchedEffect(uiState.message) {
-        if (!uiState.message.isNullOrEmpty()) {
-            scope.launch {
-                snackbarHostState.showSnackbar(
-                    uiState.message!!
-                )
-            }
-            localPlaylistViewModel.updateToDefault()
-        }
-    }
+//    LaunchedEffect(uiState.message) {
+//        if (!uiState.message.isNullOrEmpty()) {
+//            scope.launch {
+//                snackbarHostState.showSnackbar(
+//                    uiState.message!!
+//                )
+//            }
+//            localPlaylistViewModel.updateToDefault()
+//        }
+//    }
 
     Scaffold(
         modifier = Modifier
@@ -184,7 +181,6 @@ fun LocalPlaylistScreen(
             }
         }, topBar = {
             TopBar(
-                modifier = Modifier.background(Color.Red),
                 onBack = {
                     navigator.navigateUp()
                 },
@@ -250,8 +246,6 @@ fun LocalPlaylistScreen(
                 }
             }
         }) { insets ->
-
-
             LazyColumn(
                 state = listState,
                 contentPadding = PaddingValues(top = insets.calculateTopPadding(), bottom = 100.dp)
