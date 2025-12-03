@@ -60,6 +60,7 @@ import com.mono.music.ui.theme.GrayTextColor
 import com.mono.music.ui.theme.SFFontFamily
 import com.mono.music.ui.theme.SurfaceSecond
 import com.mono.music.ui.theme.WhiteTextColor
+import kotlinx.coroutines.delay
 import kotlin.math.absoluteValue
 
 
@@ -172,9 +173,8 @@ fun TrackBottomSheet(
                 mainViewModel.likeSong(
                     songId = selectedSong.songId,
                     liked = liked
-                ) {
-                    onDismiss()
-                }
+                )
+                onDismiss()
 
             }
 

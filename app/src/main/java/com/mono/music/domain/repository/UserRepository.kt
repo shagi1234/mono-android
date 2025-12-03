@@ -7,6 +7,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.mono.music.R
 import com.mono.music.database.AppDatabase
+import com.mono.music.domain.models.ActiveSessionsResponse
 import com.mono.music.domain.models.CodeVerification
 import com.mono.music.domain.models.Message
 import com.mono.music.domain.models.Nameable
@@ -14,6 +15,7 @@ import com.mono.music.domain.models.Option
 import com.mono.music.domain.models.Order
 import com.mono.music.domain.models.PaymentMethod
 import com.mono.music.domain.models.PaymentStatus
+import com.mono.music.domain.models.PrivacyPolicy
 import com.mono.music.domain.models.Promo
 import com.mono.music.domain.models.Token
 import com.mono.music.domain.models.User
@@ -105,6 +107,18 @@ class UserRepository @Inject constructor(
 
     suspend fun getPaymentMethod(): List<PaymentMethod> {
         return userService.getPaymentMethod()
+    }
+
+    suspend fun getPrivacyPolicy(): PrivacyPolicy {
+        return userService.getPrivacyPolicy()
+    }
+
+    suspend fun getActiveSessions(): ActiveSessionsResponse {
+        return userService.getActiveSessions()
+    }
+
+    suspend fun deleteSession(deviceId: String): Response<Message> {
+        return userService.deleteSession(deviceId)
     }
 
     suspend fun clearDatabase(){

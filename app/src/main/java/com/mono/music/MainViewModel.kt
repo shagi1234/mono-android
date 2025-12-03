@@ -85,7 +85,7 @@ class MainViewModel @Inject constructor(
     val likeStates = _likeState.asStateFlow()
 
 
-    fun likeSong(songId: Long, liked: Boolean, onSuccess:()-> Unit = {}) {
+    fun likeSong(songId: Long, liked: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 // Инвертируем текущее состояние
@@ -113,7 +113,6 @@ class MainViewModel @Inject constructor(
                 }
 
                 delay(100)
-                onSuccess()
 
 
             } catch (e: Exception) {

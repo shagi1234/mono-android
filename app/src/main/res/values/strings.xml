@@ -154,6 +154,17 @@
     <string name="add_to_favorites">Halanlaryma goş</string>
     <string name="remove_from_fav">Halanlarymdan aýyr</string>
     <string name="favorites">Halanlarym</string>
+    <string name="privacy_policy">Gizlinlik syýasaty</string>
+    <string name="legal">Salgylanma</string>
+    <string name="playlists_menu">Enjamlar</string>
+    <string name="terms_of_use">Ulanyýyş ylalaşygu</string>
+    <string name="copyright_holders">Awtorlyk hukugynň eýeleri üçin</string>
+    <string name="devices">Enjamlar</string>
+    <string name="this_device">Bu enjam</string>
+    <string name="other_devices">Beyleki enjamlar</string>
+    <string name="remove_device_confirmation">Siz hakykatdan hem ulgamdan çykmak isleýäňizmi?</string>
+    <string name="remove">Udalit\'</string>
+    <string name="session_removed_successfully">Sessiýa üstünlikli pozuldy</string>
 
 
 </resources>

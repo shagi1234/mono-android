@@ -158,4 +158,18 @@
     <string name="add_to_favorites">Add to Favorites</string>
     <string name="favorites">Favorites</string>
 
+    <string name="remove_from_fav">Remove from favorites</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="legal">Legal</string>
+    <string name="playlists_menu">Devices</string>
+    <string name="terms_of_use">Terms of Use</string>
+    <string name="copyright_holders">For Copyright Holders</string>
+    <string name="devices">Devices</string>
+    <string name="this_device">This device</string>
+    <string name="other_devices">Other devices</string>
+    <string name="remove_device_confirmation">Are you sure you want to log out from this device?</string>
+    <string name="remove">Remove</string>
+    <string name="session_removed_successfully">Session removed successfully</string>
+
+
 </resources>

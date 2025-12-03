@@ -1,17 +1,20 @@
 package com.mono.music.domain.service
 
+import com.mono.music.domain.models.ActiveSessionsResponse
 import com.mono.music.domain.models.CodeVerification
 import com.mono.music.domain.models.Message
 import com.mono.music.domain.models.Option
 import com.mono.music.domain.models.Order
 import com.mono.music.domain.models.PaymentMethod
 import com.mono.music.domain.models.PaymentStatus
+import com.mono.music.domain.models.PrivacyPolicy
 import com.mono.music.domain.models.Promo
 import com.mono.music.domain.models.Token
 import com.mono.music.domain.models.User
 import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
@@ -61,5 +64,14 @@ interface UserService {
 
     @GET("api/payment-methods/")
     suspend fun getPaymentMethod():List<PaymentMethod>
+
+    @GET("api/privacy-policy/")
+    suspend fun getPrivacyPolicy(): PrivacyPolicy
+
+    @GET("api/sessions/active/")
+    suspend fun getActiveSessions(): ActiveSessionsResponse
+
+    @DELETE("api/sessions/{device_id}/")
+    suspend fun deleteSession(@Path("device_id") deviceId: String): Response<Message>
 
 }

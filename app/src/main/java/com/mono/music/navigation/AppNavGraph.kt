@@ -45,6 +45,7 @@ import com.mono.music.MainActivity
 import com.mono.music.MainViewModel
 import com.mono.music.presentation.NavGraphs
 import com.mono.music.presentation.destinations.ArtistScreenDestination
+import com.mono.music.presentation.destinations.DevicesScreenDestination
 import com.mono.music.presentation.destinations.HomeScreenDestination
 import com.mono.music.presentation.destinations.LoginScreenDestination
 import com.mono.music.presentation.destinations.OnBoardingScreenDestination
@@ -62,6 +63,7 @@ import com.ramcosta.composedestinations.animations.defaults.RootNavGraphDefaultA
 import com.ramcosta.composedestinations.animations.rememberAnimatedNavHostEngine
 import com.ramcosta.composedestinations.navigation.navigate
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import kotlin.math.roundToInt
 
 @OptIn(
@@ -122,6 +124,10 @@ fun AppNavGraph(
         )
     )
 
+
+    LaunchedEffect(Unit) {
+        Timber.tag("TOKEN").e("AppNavGraph: $token ")
+    }
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(loggedIn) {
@@ -307,7 +313,7 @@ fun AppNavGraph(
 
 
 private fun String.shouldShowScaffoldElements(): Boolean {
-    return this != SettingsScreenDestination.route && this != WebViewScreenDestination.route && this != ProfileScreenDestination.route && this != TariffsScreenDestination.route
+    return this != SettingsScreenDestination.route && this != WebViewScreenDestination.route && this != ProfileScreenDestination.route && this != TariffsScreenDestination.route && this != DevicesScreenDestination.route
 }
 
 

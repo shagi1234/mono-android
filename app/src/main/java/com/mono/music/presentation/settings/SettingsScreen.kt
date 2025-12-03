@@ -71,6 +71,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mono.music.BuildConfig
 import com.mono.music.R
+import com.mono.music.presentation.destinations.DevicesScreenDestination
+import com.mono.music.presentation.destinations.LegalScreenDestination
 import com.mono.music.presentation.destinations.ProfileScreenDestination
 import com.mono.music.presentation.destinations.TariffsScreenDestination
 import com.mono.music.presentation.destinations.WebViewScreenDestination
@@ -248,12 +250,25 @@ fun SettingsScreen(
                     navigator.navigate(ProfileScreenDestination)
                 }
                 SettingsElements(
-                    icon = R.drawable.language,
-                    text = stringResource(id = R.string.language),
-                    expandable = false,
-                    endText = currentLanguage.toString()
+                    icon = R.drawable.ic_library,
+                    text = stringResource(id = R.string.playlists_menu),
+                    expandable = true
                 ) {
-                    showLanguage = true
+                    navigator.navigate(DevicesScreenDestination)
+                }
+                SettingsElements(
+                    icon = R.drawable.comments,
+                    text = stringResource(id = R.string.write_to_us),
+                    expandable = true
+                ) {
+                    showContactUs = true
+                }
+                SettingsElements(
+                    icon = R.drawable.version,
+                    text = stringResource(id = R.string.legal),
+                    expandable = true
+                ) {
+                    navigator.navigate(LegalScreenDestination)
                 }
                 SettingsElements(
                     icon = R.drawable.version,
@@ -264,11 +279,12 @@ fun SettingsScreen(
 
                 }
                 SettingsElements(
-                    icon = R.drawable.comments,
-                    text = stringResource(id = R.string.write_to_us),
-                    expandable = true
+                    icon = R.drawable.language,
+                    text = stringResource(id = R.string.language),
+                    expandable = false,
+                    endText = currentLanguage.toString()
                 ) {
-                    showContactUs = true
+                    showLanguage = true
                 }
             }
 

@@ -102,6 +102,7 @@ fun MediaInfo(
                 contentDescription = null
             )
         }
+
         IconButton(
             modifier = Modifier.scaleIconClickable { onAddToPlaylistClick() }, onClick = {
             }) {

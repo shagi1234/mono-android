@@ -155,5 +155,19 @@
     <string name="add_to_favorites">Добавить в избранное</string>
     <string name="favorites">Избранные</string>
 
+    <string name="remove_from_fav">Удалить из избранного</string>
+    <string name="privacy_policy">Политика конфиденциальности</string>
+    <string name="legal">Юридическая информация</string>
+    <string name="playlists_menu">Устройства</string>
+    <string name="terms_of_use">Условия использования</string>
+    <string name="copyright_holders">Для правообладателей</string>
+    <string name="devices">Устройства</string>
+    <string name="this_device">Это устройство</string>
+    <string name="other_devices">Другие устройства</string>
+    <string name="remove_device_confirmation">Вы уверены, что хотите выйти с этого устройства?</string>
+    <string name="remove">Удалить</string>
+    <string name="session_removed_successfully">Сеанс успешно удален</string>
+
+
 
 </resources>
