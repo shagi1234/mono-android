@@ -15,6 +15,8 @@ data class Artist(
     val singles: List<Song> = emptyList(),
     @SerializedName("latest_release")
     val latestRelease: LatestRelease,
+    @SerializedName("is_subscribed")
+    val isSubscribed: Boolean? = false,
 
     ) {
     fun getArtistImage(): String {

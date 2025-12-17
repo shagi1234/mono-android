@@ -157,7 +157,7 @@
 
     <string name="remove_from_fav">Удалить из избранного</string>
     <string name="privacy_policy">Политика конфиденциальности</string>
-    <string name="legal">Юридическая информация</string>
+    <string name="legal">Конфиденциальность</string>
     <string name="playlists_menu">Устройства</string>
     <string name="terms_of_use">Условия использования</string>
     <string name="copyright_holders">Для правообладателей</string>
@@ -169,5 +169,8 @@
     <string name="session_removed_successfully">Сеанс успешно удален</string>
 
 
+
+    <string name="subscribe">Подписаться</string>
+    <string name="unsubscribe">Отписаться</string>
 
 </resources>

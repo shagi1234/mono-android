@@ -155,7 +155,7 @@
     <string name="remove_from_fav">Halanlarymdan aýyr</string>
     <string name="favorites">Halanlarym</string>
     <string name="privacy_policy">Gizlinlik syýasaty</string>
-    <string name="legal">Salgylanma</string>
+    <string name="legal">Gizlinlik</string>
     <string name="playlists_menu">Enjamlar</string>
     <string name="terms_of_use">Ulanyýyş ylalaşygu</string>
     <string name="copyright_holders">Awtorlyk hukugynň eýeleri üçin</string>
@@ -166,5 +166,8 @@
     <string name="remove">Udalit\'</string>
     <string name="session_removed_successfully">Sessiýa üstünlikli pozuldy</string>
 
+
+    <string name="subscribe">Subscribe</string>
+    <string name="unsubscribe">Unsubscribe</string>
 
 </resources>

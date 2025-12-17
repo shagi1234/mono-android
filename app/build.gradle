@@ -11,17 +11,26 @@ plugins {
 
 android {
     namespace 'com.mono.music'
-    compileSdk 35
+    compileSdk 36
 
     defaultConfig {
         applicationId "com.mono.music"
         minSdk 26
-        targetSdk 35
-        versionCode 40
-        versionName "0.40.0"
+        targetSdk 36
+        versionCode 54
+        versionName "0.54.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary true
+        }
+    }
+
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging = false
+        }
+        resources {
+            excludes += '/META-INF/{AL2.0,LGPL2.1}'
         }
     }
 

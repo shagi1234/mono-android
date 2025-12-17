@@ -264,7 +264,7 @@ fun SettingsScreen(
                     showContactUs = true
                 }
                 SettingsElements(
-                    icon = R.drawable.version,
+                    icon = R.drawable.help,
                     text = stringResource(id = R.string.legal),
                     expandable = true
                 ) {

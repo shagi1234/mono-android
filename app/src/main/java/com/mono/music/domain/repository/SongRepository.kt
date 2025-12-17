@@ -12,6 +12,7 @@ import com.mono.music.domain.models.Playlist
 import com.mono.music.domain.models.PlaylistAction
 import com.mono.music.domain.models.PlaylistSongCrossRef
 import com.mono.music.domain.models.PlaylistWithSongs
+import com.mono.music.domain.models.RequestArtistToLibrary
 import com.mono.music.domain.models.RequestLikeSong
 import com.mono.music.domain.models.ResponseSong
 import com.mono.music.domain.models.SearchData
@@ -84,6 +85,13 @@ class SongRepository @Inject constructor(
         body: PlaylistAction
     ): Message {
         return apiService.albumToLibrary(body)
+    }
+
+    suspend fun postArtistToLibrary(
+        artistId: Long,
+        action: String
+    ): Message {
+        return apiService.artistToLibrary(RequestArtistToLibrary(artistId, action))
     }
 
     suspend fun customPlaylistToLibrary(

@@ -5,6 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -18,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -92,7 +94,6 @@ import com.mono.music.ui.theme.TransparentColor
 import com.mono.music.ui.theme.WhiteTextColor
 import com.mono.music.ui.utils.ScreenTransition
 import com.mono.music.ui.utils.ShareUtils
-import com.mono.music.ui.utils.scaleButtonClickable
 import com.ramcosta.composedestinations.annotation.Destination
 import com.ramcosta.composedestinations.navigation.DestinationsNavigator
 import kotlinx.coroutines.launch
@@ -250,21 +251,37 @@ fun ArtistScreen(
                             )
                         ), contentAlignment = Alignment.BottomCenter
                 ) {
-                    Text(
+                    Column(
                         modifier = Modifier
                             .align(Alignment.BottomStart)
                             .padding(
                                 horizontal = 16.dp, vertical = 16.dp
                             )
                             .alpha(if (fraction < 0.27) 0f else fraction),
-                        text = uiState.data?.name ?: "",
-                        style = TextStyle(
-                            color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.Bold
-                        ),
-                        maxLines = 2,
-                        textAlign = TextAlign.Start,
-                        overflow = TextOverflow.Ellipsis,
-                    )
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = uiState.data?.name ?: "",
+                            style = TextStyle(
+                                color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.Bold
+                            ),
+                            maxLines = 2,
+                            textAlign = TextAlign.Start,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+
+                        val isSubscribed = uiState.data?.isSubscribed == true
+                        CustomButton(
+                            text = if (isSubscribed) R.string.unsubscribe else R.string.subscribe,
+                            containerColor = Color.White,
+                            contentColor = Color.Black,
+                            shape = RoundedCornerShape(4.dp),
+                            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
+                            onClick = {
+                                artistViewModel.toggleSubscription()
+                            }
+                        )
+                    }
 
                     Text(
                         modifier = Modifier
@@ -283,7 +300,6 @@ fun ArtistScreen(
                     )
                 }
 
-                // Play All Button - positioned in bottom right corner
                 uiState.data?.let { data ->
                     if (data.songs.isNotEmpty()) {
                         CustomButton(

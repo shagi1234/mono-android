@@ -214,6 +214,7 @@ fun CustomButton(
     shape: Shape = MaterialTheme.shapes.large,
     hapticType: HapticType = HapticType.MEDIUM,
     scaleValue: Float = MEDIUM_PRESS,
+    contentPadding: PaddingValues = PaddingValues(vertical = 16.dp),
     onClick: () -> Unit,
 ) {
 
@@ -303,7 +304,7 @@ fun CustomButton(
             disabledContainerColor = animatedContainerColor,
             disabledContentColor = contentColor.copy(alpha = 0.6f),
         ),
-        contentPadding = PaddingValues(vertical = 16.dp),
+        contentPadding = contentPadding,
         elevation = ButtonDefaults.buttonElevation(0.dp, 0.dp)
     ) {
         Row(

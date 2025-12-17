@@ -142,4 +142,30 @@ class ArtistViewModel @Inject constructor(
         _uiState.update { it.updateToDefault() }
     }
 
+    fun toggleSubscription() {
+        val currentData = _uiState.value.data ?: return
+        val currentStatus = currentData.isSubscribed ?: false
+        val newStatus = !currentStatus
+        val action = if (newStatus) SongRepository.ACTION_ADD else SongRepository.ACTION_DELETE
+
+        // Optimistic Update
+        _uiState.update {
+            it.updateToLoaded(currentData.copy(isSubscribed = newStatus))
+        }
+
+        viewModelScope.launch {
+            try {
+                val res = songRepository.postArtistToLibrary(currentData.id, action)
+                // Optional: Update with server response if needed, but optimistic is sufficient for now
+                // Just update message if needed or silent success
+            } catch (e: Exception) {
+                // Revert on failure
+                _uiState.update {
+                    it.updateToLoaded(currentData.copy(isSubscribed = currentStatus))
+                }
+                _uiState.update { it.updateMessage(e.message) }
+            }
+        }
+    }
+
 }

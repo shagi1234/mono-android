@@ -8,6 +8,7 @@ import com.mono.music.domain.models.Message
 import com.mono.music.domain.models.Paging
 import com.mono.music.domain.models.Playlist
 import com.mono.music.domain.models.PlaylistAction
+import com.mono.music.domain.models.RequestArtistToLibrary
 import com.mono.music.domain.models.RequestLikeSong
 import com.mono.music.domain.models.ResponseSong
 import com.mono.music.domain.models.SearchData
@@ -76,6 +77,11 @@ interface ApiService {
     @POST("api/album-to-library/")
     suspend fun albumToLibrary(
         @Body body: PlaylistAction
+    ): Message
+
+    @POST("api/artist-to-library/")
+    suspend fun artistToLibrary(
+        @Body body: RequestArtistToLibrary
     ): Message
 
 

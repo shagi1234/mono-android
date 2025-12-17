@@ -19,3 +19,9 @@ data class RequestLikeSong(
     val song: Long,
     val action: String?
 )
+
+data class RequestArtistToLibrary(
+    @SerializedName("artist_id")
+    val artistId: Long,
+    val action: String
+)
